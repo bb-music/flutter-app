@@ -101,14 +101,14 @@ class BiliClient implements OriginService {
     if (response.statusCode == 200) {
       return BiliSearchResponse.fromJson(json.decode(response.body));
     } else {
-      throw Exception('获取哔哩哔哩 spi 唯一标识失败');
+      throw Exception('搜索失败');
     }
   }
 
   @override
   Future<SearchItem> searchDetail(String id) async {
     BiliId biliid = BiliId.unicode(id);
-
+    await init();
     const url = 'https://api.bilibili.com/x/web-interface/view';
     Map<String, String> query = _signParams({
       'aid': biliid.aid,
@@ -122,7 +122,43 @@ class BiliClient implements OriginService {
       final data = json.decode(response.body)['data'];
       return BiliSearchItem.fromJson(data);
     } else {
-      throw Exception('获取哔哩哔哩 spi 唯一标识失败');
+      throw Exception('搜索详情获取失败');
+    }
+  }
+
+  @override
+  Future<MusicUrl> getMusicUrl(String id) async {
+    BiliId biliid = BiliId.unicode(id);
+    if (biliid.cid == null || biliid.cid == '') {
+      // 歌曲 ID 不正确 缺少 CID
+    }
+    await init();
+    const url = 'https://api.bilibili.com/x/player/wbi/playurl';
+    Map<String, String> query = _signParams({
+      'aid': biliid.aid,
+      'bvid': biliid.bvid,
+      'cid': biliid.cid!,
+    });
+
+    final response = await _request(
+      Uri.parse(url).replace(queryParameters: query),
+    );
+
+    if (response.statusCode == 200) {
+      final res = json.decode(response.body)['data'];
+      final durl = res['durl'].toList();
+      String url = '';
+      if (durl != null && durl.isNotEmpty) {
+        url = durl[0]['url'];
+      }
+      // url =
+      //     "https://m801.music.126.net/20240319174904/19277e739010760b762322ffc3cdc891/jdyyaac/0452/0e52/005a/38fd0f464c988606826170c2399c1534.m4a";
+      return MusicUrl(
+        url: url,
+        headers: {'Referer': 'https://www.bilibili.com/'},
+      );
+    } else {
+      throw Exception('获取音乐播放地址失败');
     }
   }
 

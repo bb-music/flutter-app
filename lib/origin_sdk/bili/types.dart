@@ -129,52 +129,29 @@ class BiliSearchItem extends SearchItem {
   }
 }
 
-// class BiliVideoDetail extends MusicItem {
-//   BiliVideoDetail({
-//     required super.id,
-//     required super.cover,
-//     required super.name,
-//     required super.duration,
-//     required super.author,
-//     required super.origin,
-//   });
+class BiliMusicDetail extends MusicDetail {
+  BiliMusicDetail({
+    required super.id,
+    required super.cover,
+    required super.name,
+    required super.duration,
+    required super.author,
+    required super.origin,
+    required super.url,
+  });
 
-//   factory BiliVideoDetail.fromJson(
-//     String aid,
-//     String bvid,
-//     Map<String, dynamic> json,
-//   ) {
-//     final id = BiliId(
-//       aid: aid,
-//       bvid: bvid,
-//       cid: json['cid']?.toString(),
-//     ).decode();
-
-//     SearchType? type;
-//     List<MusicItem>? musicList;
-
-//     // 判断是否为歌单
-//     if (json['videos'] is int) {
-//       if (json['videos'] > 0) {
-//         type = SearchType.order;
-//         final pages = json['pages'].toList();
-//         final List<MusicItem> musicList = [];
-
-//         for (var j in pages) {
-//           // musicList.add(VideoDetail.fromJson(aid, bvid, j));
-//         }
-//       } else {
-//         type = SearchType.music;
-//       }
-//     }
-
-//     return BiliVideoDetail(
-//       id: id,
-//       cover: json['first_frame'],
-//       name: json['part'],
-//       duration: json['duration'],
-//       author: '',
-//       origin: OriginType.bili,
-//     );
-//   }
-// }
+  factory BiliMusicDetail.fromJson(
+    String id,
+    Map<String, dynamic> json,
+  ) {
+    return BiliMusicDetail(
+      id: id,
+      cover: json['first_frame'],
+      name: json['part'],
+      duration: json['duration'],
+      author: '',
+      origin: OriginType.bili,
+      url: '',
+    );
+  }
+}

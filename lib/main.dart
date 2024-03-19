@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/modules/search/search.dart';
+import 'package:provider/provider.dart';
 
 class Product {
   const Product({required this.name});
@@ -113,8 +115,15 @@ class _ShoppingListState extends State<ShoppingList> {
 }
 
 void main() {
-  runApp(const MaterialApp(
-    title: '哔哔音乐',
-    home: SearchView(),
-  ));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => PlayerModel()),
+      ],
+      child: const MaterialApp(
+        title: '哔哔音乐',
+        home: SearchView(),
+      ),
+    ),
+  );
 }

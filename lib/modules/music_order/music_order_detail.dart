@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:provider/provider.dart';
 
 class MusicOrderDetail extends StatelessWidget {
   final MusicOrderItem data;
@@ -31,6 +33,9 @@ class MusicOrderDetail extends StatelessWidget {
                   );
                 }).toList(),
               ),
+              onTap: () {
+                Provider.of<PlayerModel>(context, listen: false).play(item);
+              },
             );
           }),
     );

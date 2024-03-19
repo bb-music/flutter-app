@@ -38,6 +38,8 @@ dependencies:
   http: ^1.2.1
   crypto: ^3.0.3
   shared_preferences: ^2.2.2
+  provider: ^6.1.2
+  just_audio: ^0.9.36
 
 dev_dependencies:
   flutter_test:

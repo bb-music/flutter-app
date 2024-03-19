@@ -112,7 +112,7 @@ class MusicOrderItem {
 }
 
 /// 歌曲详情
-abstract class MusicDetail {
+class MusicDetail {
   final String id; // ID
   final String cover; // 封面
   final String name; // 名称
@@ -132,6 +132,12 @@ abstract class MusicDetail {
   });
 }
 
+class MusicUrl {
+  final String url; // 播放地址
+  final Map<String, String>? headers; // 请求头
+  const MusicUrl({required this.url, this.headers});
+}
+
 /// 歌单源服务
 abstract class OriginService {
   /// 搜索
@@ -140,8 +146,8 @@ abstract class OriginService {
   /// 搜索详情
   Future<SearchItem> searchDetail(String id);
 
-  // /// 歌曲详情
-  // Future<MusicDetail> getMusicDetail(String id);
+  /// 歌曲详情
+  Future<MusicUrl> getMusicUrl(String id);
 
   // /// 下载歌曲
   // Future<void> downloadMusic(String id, String name, String targetDir);
