@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/modules/search/search.dart';
 
 class Product {
   const Product({required this.name});
@@ -95,7 +96,7 @@ class _ShoppingListState extends State<ShoppingList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shopping List'),
+        title: const Text('哔哔音乐'),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -113,13 +114,7 @@ class _ShoppingListState extends State<ShoppingList> {
 
 void main() {
   runApp(const MaterialApp(
-    title: 'Shopping App',
-    home: ShoppingList(
-      products: [
-        Product(name: 'Eggs'),
-        Product(name: 'Flour'),
-        Product(name: 'Chocolate chips'),
-      ],
-    ),
+    title: '哔哔音乐',
+    home: SearchView(),
   ));
 }

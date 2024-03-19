@@ -1,3 +1,7 @@
+import 'package:flutter_app/origin_sdk/bili/utils.dart';
+import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:flutter_app/utils/clear_html_tags.dart';
+
 /// 签名秘钥
 class SignData {
   final String imgKey;
@@ -34,80 +38,143 @@ class SpiData {
   }
 }
 
-/// 搜索参数
-class SearchParams {
-  final String keyword;
-  final int page;
-  final String searchType = 'video';
-
-  const SearchParams({
-    required this.keyword,
-    required this.page,
-  });
-}
-
 /// 搜索结果
-class SearchResponse {
-  final int current; // 当前页
-  final int total; // 总数
-  final int pageSize; // 每页数
-  final List<SearchItem> data; // 结果
-
-  SearchResponse({
-    required this.current,
-    required this.total,
-    required this.pageSize,
-    required this.data,
+class BiliSearchResponse extends SearchResponse {
+  BiliSearchResponse({
+    required super.current,
+    required super.total,
+    required super.pageSize,
+    required super.data,
   });
-
-  factory SearchResponse.fromJson(Map<String, dynamic> json) {
-    return SearchResponse(
-      current: json['data']['curpage'],
-      total: json['data']['total'],
+  factory BiliSearchResponse.fromJson(Map<String, dynamic> json) {
+    var result = json['data']['result'].toList();
+    List<BiliSearchItem> data = [];
+    for (var j in result) {
+      if (j['type'] != 'ketang') {
+        data.add(BiliSearchItem.fromJson(j));
+      }
+    }
+    return BiliSearchResponse(
+      current: json['data']['page'],
+      total: json['data']['numResults'],
       pageSize: json['data']['pagesize'],
-      data: json['data']['data'],
+      data: data,
     );
   }
 }
 
 /// 搜索条目
-class SearchItem {
-  String id; // ID
-  String cover; // 封面
-  String name; // 名称
-  int duration; // 时长
-  String author; // 作者
-  SearchType? type; // 类型
-  OriginType origin; // 来源
-  List<MusicItem> musicList; // 音乐列表 Type 为 order 时会有
-
-  SearchItem({
-    required this.id,
-    required this.cover,
-    required this.name,
-    required this.duration,
-    required this.author,
-    required this.type,
-    required this.origin,
-    required this.musicList,
+class BiliSearchItem extends SearchItem {
+  const BiliSearchItem({
+    required super.id,
+    required super.cover,
+    required super.name,
+    required super.duration,
+    required super.author,
+    required super.origin,
+    super.musicList,
+    super.type,
   });
+  factory BiliSearchItem.fromJson(Map<String, dynamic> json) {
+    final String aid = json['aid'].toString();
+    final String bvid = json['bvid'];
+    final String id = BiliId(aid: aid, bvid: bvid).decode();
+
+    SearchType? type;
+    List<MusicItem> musicList = [];
+
+    // 判断是否为歌单
+    if (json['videos'] != null) {
+      if (json['videos'] > 0) {
+        type = SearchType.order;
+        final pages = json['pages'].toList();
+
+        for (var j in pages) {
+          final mid = BiliId(
+            aid: aid,
+            bvid: bvid,
+            cid: j['cid']?.toString(),
+          ).decode();
+
+          final item = MusicItem(
+            id: mid,
+            cover: j['first_frame'],
+            name: j['part'],
+            duration: j['duration'],
+            author: '',
+            origin: OriginType.bili,
+          );
+          musicList.add(item);
+        }
+      } else {
+        type = SearchType.music;
+      }
+    }
+
+    print(type);
+    print(musicList);
+
+    return BiliSearchItem(
+      id: id,
+      cover: json['pic'],
+      name: clearHtmlTags(json['title']),
+      duration: json['duration'] is String
+          ? duration2Seconds(json['duration'])
+          : json['duration'],
+      author: json['author'] ?? "",
+      origin: OriginType.bili,
+      type: type,
+      musicList: musicList,
+    );
+  }
 }
 
-enum SearchType {
-  // 定义 SearchType 枚举类型
-  // 可根据实际情况添加更多类型
-  order,
-  normal,
-}
+// class BiliVideoDetail extends MusicItem {
+//   BiliVideoDetail({
+//     required super.id,
+//     required super.cover,
+//     required super.name,
+//     required super.duration,
+//     required super.author,
+//     required super.origin,
+//   });
 
-enum OriginType {
-  // 定义 OriginType 枚举类型
-  // 可根据实际情况添加更多类型
-  source1,
-  source2,
-}
+//   factory BiliVideoDetail.fromJson(
+//     String aid,
+//     String bvid,
+//     Map<String, dynamic> json,
+//   ) {
+//     final id = BiliId(
+//       aid: aid,
+//       bvid: bvid,
+//       cid: json['cid']?.toString(),
+//     ).decode();
 
-class MusicItem {
-  // 定义 MusicItem 类
-  // 可根据实际情况添加更多字段
-}
+//     SearchType? type;
+//     List<MusicItem>? musicList;
+
+//     // 判断是否为歌单
+//     if (json['videos'] is int) {
+//       if (json['videos'] > 0) {
+//         type = SearchType.order;
+//         final pages = json['pages'].toList();
+//         final List<MusicItem> musicList = [];
+
+//         for (var j in pages) {
+//           // musicList.add(VideoDetail.fromJson(aid, bvid, j));
+//         }
+//       } else {
+//         type = SearchType.music;
+//       }
+//     }
+
+//     return BiliVideoDetail(
+//       id: id,
+//       cover: json['first_frame'],
+//       name: json['part'],
+//       duration: json['duration'],
+//       author: '',
+//       origin: OriginType.bili,
+//     );
+//   }
+// }
