@@ -1,8 +1,12 @@
 // import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/components/text_tags/tags.dart';
 import 'package:flutter_app/modules/music_order/music_order_detail.dart';
+import 'package:flutter_app/modules/player/player.dart';
+import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/origin_sdk/service.dart';
+import 'package:provider/provider.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -77,7 +81,7 @@ class _SearchViewState extends State<SearchView> {
       ),
       body: ListView.builder(
           controller: _scrollController,
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 100),
           itemCount: _searchItemList.length + 1,
           itemBuilder: (context, index) {
             if (_searchItemList.isEmpty) {
@@ -114,16 +118,7 @@ class _SearchViewState extends State<SearchView> {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
-              subtitle: Center(
-                child: Row(
-                  children: tags.map((tag) {
-                    return Text(
-                      tag,
-                      style: const TextStyle(fontSize: 12),
-                    );
-                  }).toList(),
-                ),
-              ),
+              subtitle: TextTags(tags: tags),
               onTap: () async {
                 final detail = await service.searchDetail(item.id);
                 if (detail.type != null && detail.type == SearchType.order) {
@@ -143,10 +138,22 @@ class _SearchViewState extends State<SearchView> {
                       ),
                     ),
                   );
+                } else {
+                  Provider.of<PlayerModel>(context).play(
+                    MusicItem(
+                      id: detail.id,
+                      cover: detail.cover,
+                      name: detail.name,
+                      duration: detail.duration,
+                      author: detail.author,
+                      origin: detail.origin,
+                    ),
+                  );
                 }
               },
             );
           }),
+      floatingActionButton: PlayerView(),
     );
   }
 }

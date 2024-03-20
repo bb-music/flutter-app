@@ -1,5 +1,6 @@
 /// 播放状态
 enum PlayerStatus {
+  loading(value: -1, name: '加载中'),
   stop(value: 0, name: '停止'),
   play(value: 1, name: '播放中'),
   pause(value: 2, name: '暂停中');

@@ -8,15 +8,30 @@ class PlayerModel extends ChangeNotifier {
   // 播放器实例
   final audio = audioplayers.AudioPlayer();
   // 当前歌曲
-  MusicItem? _current;
+  MusicItem? current;
   // 播放列表
-  final List<MusicItem> _playerList = [];
+  final List<MusicItem> playerList = [];
   // 已播放，用于计算随机
   final List<String> _playerHistory = [];
   // 播放器状态
-  PlayerStatus _playerStatus = PlayerStatus.stop;
+  PlayerStatus playerStatus = PlayerStatus.stop;
   // 播放模式
-  PlayerMode _playerMode = PlayerMode.listLoop;
+  PlayerMode playerMode = PlayerMode.listLoop;
+
+  PlayerModel() {
+    audio.playerStateStream.listen((state) {
+      if (state.playing) {
+        _setStatus(PlayerStatus.play);
+        playerStatus = PlayerStatus.play;
+      } else {
+        _setStatus(PlayerStatus.pause);
+      }
+      if (state.processingState == audioplayers.ProcessingState.loading) {
+        _setStatus(PlayerStatus.loading);
+      }
+    });
+    // audio.positionStream.listen((event) { })
+  }
 
   // 播放
   void play(MusicItem? music) async {
@@ -46,29 +61,27 @@ class PlayerModel extends ChangeNotifier {
      */
     if (music != null) {
       // 判断播放列表是否已存在
-      if (_playerList.where((e) => e.id == music.id).isEmpty) {
+      if (playerList.where((e) => e.id == music.id).isEmpty) {
         // 不存在，添加到播放列表
-        _playerList.add(music);
+        playerList.add(music);
       }
 
-      if (_current?.id != music.id) {
-        _current = music;
+      if (current?.id != music.id) {
+        current = music;
         await _play(music.id);
       } else {
         // 和 current 相等
-        if (_playerStatus == PlayerStatus.play) {
+        if (playerStatus == PlayerStatus.play) {
           // 播放中暂停
           audio.pause();
-          _playerStatus = PlayerStatus.pause;
         } else {
           // 停止中恢复播放
           audio.play();
-          _playerStatus = PlayerStatus.play;
         }
       }
     } else {
-      if (_current != null) {
-        if (_playerStatus == PlayerStatus.play) {
+      if (current != null) {
+        if (playerStatus == PlayerStatus.play) {
           // 播放中暂停
           audio.pause();
         } else {
@@ -77,11 +90,11 @@ class PlayerModel extends ChangeNotifier {
         }
       } else {
         // 没有播放列表
-        if (_playerList.isNotEmpty) {
+        if (playerList.isNotEmpty) {
           // 播放列表不为空
-          _current = _playerList.first;
-          if (_current != null) {
-            await _play(_current!.id);
+          current = playerList.first;
+          if (current != null) {
+            await _play(current!.id);
           }
         } else {
           // 播放列表为空
@@ -95,37 +108,37 @@ class PlayerModel extends ChangeNotifier {
   _play(String id) async {
     MusicUrl musicUrl = await service.getMusicUrl(id);
     audio.setUrl(musicUrl.url, headers: musicUrl.headers);
-    _playerStatus = PlayerStatus.play;
     audio.play();
+  }
+
+  _setStatus(PlayerStatus status) {
+    if (playerStatus == status) return;
+    playerStatus = status;
+    notifyListeners();
   }
 
   // 暂停
   void pause() {
     audio.pause();
-    _playerStatus = PlayerStatus.pause;
     notifyListeners();
   }
 
   // 添加到播放列表中
-  void addPlayerList(MusicItem music) {
-    removePlayerList(music);
-    _playerList.add(music);
+  void addPlayerList(List<MusicItem> musics) {
+    removePlayerList(musics);
+    playerList.addAll(musics);
     notifyListeners();
   }
 
   // 在播放列表中移除
-  void removePlayerList(MusicItem music) {
-    // 判断 _playerList 是否存在，存在则删除
-    int index = _playerList.indexWhere((w) => w.id == music.id);
-    if (index > -1) {
-      _playerList.removeAt(index);
-    }
+  void removePlayerList(List<MusicItem> musics) {
+    playerList.removeWhere((w) => musics.where((e) => e.id == w.id).isNotEmpty);
     notifyListeners();
   }
 
   // 清空播放列表
   void clearPlayerList() {
-    _playerList.clear();
+    playerList.clear();
     notifyListeners();
   }
 }

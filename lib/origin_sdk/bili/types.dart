@@ -98,7 +98,7 @@ class BiliSearchItem extends SearchItem {
 
           final item = MusicItem(
             id: mid,
-            cover: j['first_frame'],
+            cover: j['first_frame'] ?? "",
             name: j['part'],
             duration: j['duration'],
             author: '',
@@ -119,7 +119,7 @@ class BiliSearchItem extends SearchItem {
       cover: json['pic'],
       name: clearHtmlTags(json['title']),
       duration: json['duration'] is String
-          ? duration2Seconds(json['duration'])
+          ? duration2seconds(json['duration'])
           : json['duration'],
       author: json['author'] ?? "",
       origin: OriginType.bili,

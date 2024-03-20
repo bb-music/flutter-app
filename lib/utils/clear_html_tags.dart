@@ -8,7 +8,7 @@ String clearHtmlTags(String htmlText) {
 }
 
 /// 将 mm:ss 格式的时间转换为 秒
-int duration2Seconds(String durationStr) {
+int duration2seconds(String durationStr) {
   if (durationStr.isEmpty) {
     return 0;
   }
@@ -19,4 +19,13 @@ int duration2Seconds(String durationStr) {
   int minutes = int.tryParse(parts[0]) ?? 0;
   int seconds = int.tryParse(parts[1]) ?? 0;
   return minutes * 60 + seconds;
+}
+
+/// 将 mm:ss 格式的时间转换为 秒
+String seconds2duration(int seconds) {
+  int minutes = (seconds / 60).floor();
+  int remainingSeconds = seconds % 60;
+  String minutesStr = minutes.toString().padLeft(2, '0');
+  String secondsStr = remainingSeconds.toString().padLeft(2, '0');
+  return '$minutesStr:$secondsStr';
 }
