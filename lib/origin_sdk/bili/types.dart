@@ -78,41 +78,42 @@ class BiliSearchItem extends SearchItem {
   factory BiliSearchItem.fromJson(Map<String, dynamic> json) {
     final String aid = json['aid'].toString();
     final String bvid = json['bvid'];
-    final String id = BiliId(aid: aid, bvid: bvid).decode();
+    String id = BiliId(aid: aid, bvid: bvid).decode();
 
     SearchType? type;
     List<MusicItem> musicList = [];
 
     // 判断是否为歌单
     if (json['videos'] != null) {
-      if (json['videos'] > 0) {
-        type = SearchType.order;
-        final pages = json['pages'].toList();
+      type = SearchType.order;
+      final pages = json['pages'].toList();
 
-        for (var j in pages) {
-          final mid = BiliId(
-            aid: aid,
-            bvid: bvid,
-            cid: j['cid']?.toString(),
-          ).decode();
+      for (var j in pages) {
+        final mid = BiliId(
+          aid: aid,
+          bvid: bvid,
+          cid: j['cid']?.toString(),
+        ).decode();
 
-          final item = MusicItem(
-            id: mid,
-            cover: j['first_frame'] ?? "",
-            name: j['part'],
-            duration: j['duration'],
-            author: '',
-            origin: OriginType.bili,
-          );
-          musicList.add(item);
-        }
-      } else {
-        type = SearchType.music;
+        final item = MusicItem(
+          id: mid,
+          cover: j['first_frame'] ?? "",
+          name: j['part'],
+          duration: j['duration'],
+          author: '',
+          origin: OriginType.bili,
+        );
+        musicList.add(item);
       }
     }
-
-    print(type);
-    print(musicList);
+    if (musicList.isNotEmpty) {
+      if (json['videos'] > 1) {
+        type = SearchType.order;
+      } else {
+        type = SearchType.music;
+        id = musicList[0].id;
+      }
+    }
 
     return BiliSearchItem(
       id: id,

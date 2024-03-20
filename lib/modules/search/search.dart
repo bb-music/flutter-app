@@ -17,7 +17,7 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> {
   final ScrollController _scrollController = ScrollController();
-  final _keywordController = TextEditingController(text: "周杰伦");
+  final _keywordController = TextEditingController(text: "不问别离");
   int _current = 1;
   bool _loading = false;
   final List<SearchItem> _searchItemList = [];
@@ -69,6 +69,8 @@ class _SearchViewState extends State<SearchView> {
 
   @override
   Widget build(BuildContext context) {
+    var navigator = Navigator.of(context);
+    var player = Provider.of<PlayerModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: _SearchForm(
@@ -83,7 +85,7 @@ class _SearchViewState extends State<SearchView> {
           controller: _scrollController,
           padding: const EdgeInsets.only(bottom: 100),
           itemCount: _searchItemList.length + 1,
-          itemBuilder: (context, index) {
+          itemBuilder: (ctx, index) {
             if (_searchItemList.isEmpty) {
               return null;
             }
@@ -121,10 +123,9 @@ class _SearchViewState extends State<SearchView> {
               subtitle: TextTags(tags: tags),
               onTap: () async {
                 final detail = await service.searchDetail(item.id);
-                if (detail.type != null && detail.type == SearchType.order) {
+                if (detail.type == SearchType.order) {
                   // 歌单
-                  Navigator.push(
-                    context,
+                  navigator.push(
                     MaterialPageRoute(
                       builder: (context) => MusicOrderDetail(
                         data: MusicOrderItem(
@@ -139,7 +140,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                   );
                 } else {
-                  Provider.of<PlayerModel>(context).play(
+                  player.play(
                     MusicItem(
                       id: detail.id,
                       cover: detail.cover,

@@ -40,6 +40,7 @@ dependencies:
   shared_preferences: ^2.2.2
   provider: ^6.1.2
   just_audio: ^0.9.36
+  fluttertoast: ^8.2.4
 
 dev_dependencies:
   flutter_test:

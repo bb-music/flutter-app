@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/components/sheet/bottom_sheet.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 
 class PlayerList extends StatelessWidget {
+  const PlayerList({super.key});
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height - 45;
@@ -72,7 +74,12 @@ class PlayerList extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final item = player.playerList.toList()[index];
                           return ListTile(
-                            title: Text(item.name),
+                            title: Text(
+                              item.name,
+                              style: const TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                             subtitle: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -107,55 +114,33 @@ class PlayerList extends StatelessWidget {
 }
 
 void showItemSheet(BuildContext context, MusicItem data) {
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext context) {
-      return SizedBox(
-        height: 272,
-        child: ListView(
-          children: [
-            ListTile(
-              title: Text(
-                data.name,
-                style: TextStyle(
-                  color: Theme.of(context).hintColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const Divider(
-              height: 1,
-            ),
-            const SizedBox(
-              height: 7,
-            ),
-            ListTile(
-              title: const Text('播放'),
-              onTap: () {
-                Provider.of<PlayerModel>(context, listen: false).play(data);
-              },
-            ),
-            ListTile(
-              title: const Text('在播放列表中移除'),
-              onTap: () {
-                Provider.of<PlayerModel>(context, listen: false)
-                    .removePlayerList([data]);
-              },
-            ),
-            ListTile(
-              title: const Text('下载'),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('取消'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
+  openBottomSheet(context, [
+    SheetItem(
+      title: Text(
+        data.name,
+        style: TextStyle(
+          color: Theme.of(context).hintColor,
+          fontWeight: FontWeight.bold,
+          overflow: TextOverflow.ellipsis,
         ),
-      );
-    },
-  );
+      ),
+    ),
+    SheetItem(
+        title: const Text('播放'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false).play(data);
+          Navigator.of(context).pop();
+        }),
+    SheetItem(
+        title: const Text('在播放列表中移除'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false)
+              .removePlayerList([data]);
+          Navigator.of(context).pop();
+        }),
+    SheetItem(
+      title: const Text('下载'),
+      onPressed: () {},
+    ),
+  ]);
 }

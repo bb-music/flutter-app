@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/components/sheet/bottom_sheet.dart';
 import 'package:flutter_app/components/text_tags/tags.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
@@ -20,59 +21,27 @@ class MusicOrderDetail extends StatelessWidget {
             icon: const Icon(Icons.more_vert_outlined),
             tooltip: '更多操作',
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (BuildContext context) {
-                  return SizedBox(
-                    height: 272,
-                    child: ListView(
-                      children: [
-                        ListTile(
-                          title: Text(
-                            "更多操作",
-                            style: TextStyle(
-                              color: Theme.of(context).hintColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const Divider(
-                          height: 1,
-                        ),
-                        const SizedBox(
-                          height: 7,
-                        ),
-                        ListTile(
-                          title: const Text('播放全部'),
-                          onTap: () {
-                            Provider.of<PlayerModel>(context, listen: false)
-                              ..clearPlayerList()
-                              ..addPlayerList(data.musicList);
-                          },
-                        ),
-                        ListTile(
-                          title: const Text('追加到播放列表'),
-                          onTap: () {
-                            Provider.of<PlayerModel>(context, listen: false)
-                                .addPlayerList(data.musicList);
-                          },
-                        ),
-                        ListTile(
-                          title: const Text('加入歌单'),
-                          onTap: () {},
-                        ),
-                        const Divider(),
-                        ListTile(
-                          title: const Text('取消'),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
+              openBottomSheet(context, [
+                SheetItem(
+                  title: const Text('播放全部'),
+                  onPressed: () {
+                    Provider.of<PlayerModel>(context, listen: false)
+                      ..clearPlayerList()
+                      ..addPlayerList(data.musicList);
+                  },
+                ),
+                SheetItem(
+                  title: const Text('追加到播放列表'),
+                  onPressed: () {
+                    Provider.of<PlayerModel>(context, listen: false)
+                        .addPlayerList(data.musicList);
+                  },
+                ),
+                SheetItem(
+                  title: const Text('加入歌单'),
+                  onPressed: () {},
+                ),
+              ]);
             },
           )
         ],

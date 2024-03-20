@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:just_audio/just_audio.dart' as audioplayers;
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.const.dart';
@@ -22,12 +24,14 @@ class PlayerModel extends ChangeNotifier {
     audio.playerStateStream.listen((state) {
       if (state.playing) {
         _setStatus(PlayerStatus.play);
-        playerStatus = PlayerStatus.play;
       } else {
         _setStatus(PlayerStatus.pause);
       }
       if (state.processingState == audioplayers.ProcessingState.loading) {
         _setStatus(PlayerStatus.loading);
+      }
+      if (state.processingState == audioplayers.ProcessingState.completed) {
+        _setStatus(PlayerStatus.pause);
       }
     });
     // audio.positionStream.listen((event) { })
@@ -69,6 +73,7 @@ class PlayerModel extends ChangeNotifier {
       if (current?.id != music.id) {
         current = music;
         await _play(music.id);
+        _addPlayerHistory();
       } else {
         // 和 current 相等
         if (playerStatus == PlayerStatus.play) {
@@ -95,31 +100,119 @@ class PlayerModel extends ChangeNotifier {
           current = playerList.first;
           if (current != null) {
             await _play(current!.id);
+            _addPlayerHistory();
           }
         } else {
           // 播放列表为空
         }
       }
     }
-
-    notifyListeners();
-  }
-
-  _play(String id) async {
-    MusicUrl musicUrl = await service.getMusicUrl(id);
-    audio.setUrl(musicUrl.url, headers: musicUrl.headers);
-    audio.play();
-  }
-
-  _setStatus(PlayerStatus status) {
-    if (playerStatus == status) return;
-    playerStatus = status;
     notifyListeners();
   }
 
   // 暂停
   void pause() {
     audio.pause();
+    notifyListeners();
+  }
+
+  // 上一首
+  void prev() {
+    audio.seek(Duration.zero);
+    if (current != null) {
+      int ind = _playerHistory.indexOf(current!.id);
+      if (ind > 0) {
+        String prevId = _playerHistory[ind - 1];
+        MusicItem? m = playerList.firstWhere((e) => e.id == prevId);
+        m ?? play(m);
+      }
+    }
+  }
+
+  // 下一首
+  void next() {
+    if (current == null) return;
+    audio.seek(Duration.zero);
+    if (playerMode == PlayerMode.random) {
+      endNext();
+    } else {
+      int index = playerList.indexWhere((p) => p.id == current!.id);
+      if (index == playerList.length - 1) return;
+      play(playerList[index + 1]);
+    }
+  }
+
+  // 结束播放
+  void endNext() {
+    if (current == null) return;
+
+    signalLoop() {
+      audio.seek(Duration.zero);
+      play(current);
+    }
+
+    // 单曲循环
+    if (playerMode == PlayerMode.signalLoop) {
+      signalLoop();
+      return;
+    }
+    // 随机
+    if (playerMode == PlayerMode.random) {
+      List<MusicItem> list =
+          playerList.where((p) => !_playerHistory.contains(p.id)).toList();
+      int len = list.length;
+
+      if (len == 0) {
+        _playerHistory.clear();
+        int nn = playerList.length;
+        var r = Random().nextInt(nn);
+        play(playerList[r]);
+      } else {
+        var r = Random().nextInt(len);
+        play(list[r]);
+      }
+      return;
+    }
+    int index = playerList.indexWhere((p) => p.id == current!.id);
+    // 列表顺序播放
+    if (playerMode == PlayerMode.listOrder) {
+      if (index != playerList.length - 1) {
+        play(playerList[index + 1]);
+      }
+      // 列表顺序结尾停止
+    }
+    // 列表循环
+    if (playerMode == PlayerMode.listLoop) {
+      if (playerList.length == 1) {
+        // 只有一个时就是单曲循环
+        signalLoop();
+      } else if (index == playerList.length - 1) {
+        play(playerList[0]);
+      } else {
+        play(playerList[index + 1]);
+      }
+    }
+  }
+
+  // 切换播放模式
+  void togglePlayerMode(PlayerMode? mode) {
+    if (mode != null) {
+      playerMode = mode;
+    } else {
+      const l = [
+        PlayerMode.signalLoop,
+        PlayerMode.listLoop,
+        PlayerMode.random,
+        PlayerMode.listLoop,
+      ];
+      int index = l.indexWhere((p) => playerMode == p);
+
+      if (index == l.length - 1) {
+        playerMode = l[0];
+      } else {
+        playerMode = l[index + 1];
+      }
+    }
     notifyListeners();
   }
 
@@ -139,6 +232,26 @@ class PlayerModel extends ChangeNotifier {
   // 清空播放列表
   void clearPlayerList() {
     playerList.clear();
+    notifyListeners();
+  }
+
+  // 添加到播放历史（用于随机播放）
+  void _addPlayerHistory() {
+    if (current != null) {
+      _playerHistory.removeWhere((e) => e == current!.id);
+      _playerHistory.add(current!.id);
+    }
+  }
+
+  _play(String id) async {
+    MusicUrl musicUrl = await service.getMusicUrl(id);
+    audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+    audio.play();
+  }
+
+  _setStatus(PlayerStatus status) {
+    if (playerStatus == status) return;
+    playerStatus = status;
     notifyListeners();
   }
 }
