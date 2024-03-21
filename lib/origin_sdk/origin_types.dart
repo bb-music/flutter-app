@@ -7,6 +7,10 @@ enum SearchType {
 
   final String value;
   final String name;
+
+  static SearchType getByValue(String value) {
+    return values.firstWhere((element) => element.value == value);
+  }
 }
 
 /// 音乐源
@@ -18,6 +22,10 @@ enum OriginType {
 
   final String value;
   final String name;
+
+  static OriginType getByValue(String value) {
+    return values.firstWhere((element) => element.value == value);
+  }
 }
 
 /// 搜索参数
@@ -86,6 +94,17 @@ class MusicItem {
     required this.author,
     required this.origin,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "cover": cover,
+      "name": name,
+      "duration": duration,
+      "author": author,
+      "origin": origin.value,
+    };
+  }
 }
 
 /// 歌单

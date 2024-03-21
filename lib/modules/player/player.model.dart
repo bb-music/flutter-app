@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:just_audio/just_audio.dart' as audioplayers;
@@ -5,12 +7,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.const.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/origin_sdk/service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _storageKeyCurrent = 'player_current';
+const _storageKeyPlayerList = 'player_player_list';
+const _storageKeyHistoryList = 'player_history_list';
+const _storageKeyPlayerMode = 'player_player_mode';
+
+// 计时器
+Timer? _timer;
 
 class PlayerModel extends ChangeNotifier {
   // 播放器实例
   final audio = audioplayers.AudioPlayer();
   // 当前歌曲
   MusicItem? current;
+  // 歌曲是否加载
+  bool isLoading = false;
   // 播放列表
   final List<MusicItem> playerList = [];
   // 已播放，用于计算随机
@@ -21,17 +34,29 @@ class PlayerModel extends ChangeNotifier {
   PlayerMode playerMode = PlayerMode.listLoop;
 
   PlayerModel() {
+    _initLocalStorage();
     audio.playerStateStream.listen((state) {
+      print("====== START =======");
+      print(state);
+      print("====== END ========");
       if (state.playing) {
         _setStatus(PlayerStatus.play);
       } else {
         _setStatus(PlayerStatus.pause);
       }
+      // var Function closeLoading = () {};
       if (state.processingState == audioplayers.ProcessingState.loading) {
-        _setStatus(PlayerStatus.loading);
+        // closeLoading = BotToast.showLoading();
+        isLoading = true;
+        notifyListeners();
+      }
+      if (state.processingState == audioplayers.ProcessingState.ready) {
+        // closeLoading();
+        isLoading = false;
+        notifyListeners();
       }
       if (state.processingState == audioplayers.ProcessingState.completed) {
-        _setStatus(PlayerStatus.pause);
+        endNext();
       }
     });
     // audio.positionStream.listen((event) { })
@@ -81,7 +106,9 @@ class PlayerModel extends ChangeNotifier {
           audio.pause();
         } else {
           // 停止中恢复播放
-          audio.play();
+          print("============= 停止中恢复播放1 ============");
+          print(audio.audioSource);
+          _play(null);
         }
       }
     } else {
@@ -91,7 +118,9 @@ class PlayerModel extends ChangeNotifier {
           audio.pause();
         } else {
           // 停止中恢复播放
-          audio.play();
+          print("============= 停止中恢复播放2 ============");
+          print(audio.audioSource);
+          _play(null);
         }
       } else {
         // 没有播放列表
@@ -108,6 +137,7 @@ class PlayerModel extends ChangeNotifier {
       }
     }
     notifyListeners();
+    _updateLocalStorage();
   }
 
   // 暂停
@@ -123,10 +153,11 @@ class PlayerModel extends ChangeNotifier {
       int ind = _playerHistory.indexOf(current!.id);
       if (ind > 0) {
         String prevId = _playerHistory[ind - 1];
-        MusicItem? m = playerList.firstWhere((e) => e.id == prevId);
-        m ?? play(m);
+        MusicItem m = playerList.firstWhere((e) => e.id == prevId);
+        play(m);
       }
     }
+    _updateLocalStorage();
   }
 
   // 下一首
@@ -139,6 +170,7 @@ class PlayerModel extends ChangeNotifier {
       int index = playerList.indexWhere((p) => p.id == current!.id);
       if (index == playerList.length - 1) return;
       play(playerList[index + 1]);
+      _updateLocalStorage();
     }
   }
 
@@ -154,6 +186,7 @@ class PlayerModel extends ChangeNotifier {
     // 单曲循环
     if (playerMode == PlayerMode.signalLoop) {
       signalLoop();
+      _updateLocalStorage();
       return;
     }
     // 随机
@@ -171,6 +204,7 @@ class PlayerModel extends ChangeNotifier {
         var r = Random().nextInt(len);
         play(list[r]);
       }
+      _updateLocalStorage();
       return;
     }
     int index = playerList.indexWhere((p) => p.id == current!.id);
@@ -192,6 +226,7 @@ class PlayerModel extends ChangeNotifier {
         play(playerList[index + 1]);
       }
     }
+    _updateLocalStorage();
   }
 
   // 切换播放模式
@@ -213,6 +248,7 @@ class PlayerModel extends ChangeNotifier {
         playerMode = l[index + 1];
       }
     }
+    _updateLocalStorage();
     notifyListeners();
   }
 
@@ -220,18 +256,21 @@ class PlayerModel extends ChangeNotifier {
   void addPlayerList(List<MusicItem> musics) {
     removePlayerList(musics);
     playerList.addAll(musics);
+    _updateLocalStorage();
     notifyListeners();
   }
 
   // 在播放列表中移除
   void removePlayerList(List<MusicItem> musics) {
     playerList.removeWhere((w) => musics.where((e) => e.id == w.id).isNotEmpty);
+    _updateLocalStorage();
     notifyListeners();
   }
 
   // 清空播放列表
   void clearPlayerList() {
     playerList.clear();
+    _updateLocalStorage();
     notifyListeners();
   }
 
@@ -243,15 +282,101 @@ class PlayerModel extends ChangeNotifier {
     }
   }
 
-  _play(String id) async {
-    MusicUrl musicUrl = await service.getMusicUrl(id);
-    audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+  _play(String? id) async {
+    if (id != null) {
+      MusicUrl musicUrl = await service.getMusicUrl(id);
+      audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+    } else {
+      if (audio.audioSource == null && current == null) {
+        return;
+      }
+      print('无音源时使用 current');
+      MusicUrl musicUrl = await service.getMusicUrl(current!.id);
+      audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+    }
     audio.play();
   }
 
   _setStatus(PlayerStatus status) {
     if (playerStatus == status) return;
     playerStatus = status;
+    notifyListeners();
+  }
+
+  // 更新缓存
+  _updateLocalStorage() {
+    _timer?.cancel();
+    _timer = Timer(const Duration(microseconds: 500), () async {
+      final localStorage = await SharedPreferences.getInstance();
+      // json 编码
+      localStorage.setString(
+        _storageKeyCurrent,
+        current != null ? jsonEncode(current) : "",
+      );
+      localStorage.setString(
+        _storageKeyPlayerMode,
+        playerMode.value.toString(),
+      );
+      localStorage.setStringList(
+        _storageKeyHistoryList,
+        _playerHistory,
+      );
+      localStorage.setStringList(
+        _storageKeyPlayerList,
+        playerList.map((e) => jsonEncode(e)).toList(),
+      );
+    });
+  }
+
+  // 读取缓存
+  _initLocalStorage() async {
+    final localStorage = await SharedPreferences.getInstance();
+
+    // json 编码
+    String? c = localStorage.getString(_storageKeyCurrent);
+    if (c != null && c.isNotEmpty) {
+      var data = jsonDecode(c) as Map<String, dynamic>;
+      current = MusicItem(
+        id: data['id'],
+        name: data['name'],
+        cover: data['cover'],
+        author: data['author'],
+        duration: data['duration'],
+        origin: OriginType.getByValue(data['origin']),
+      );
+      service.getMusicUrl(current!.id).then((musicUrl) {
+        audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+      });
+    }
+    String? m = localStorage.getString(_storageKeyPlayerMode);
+    if (m != null && m.isNotEmpty) {
+      playerMode = PlayerMode.getByValue(int.parse(m));
+    }
+
+    List<String>? h = localStorage.getStringList(_storageKeyHistoryList);
+    if (h != null && h.isNotEmpty) {
+      _playerHistory.clear();
+      _playerHistory.addAll(h);
+    }
+
+    List<String>? pl = localStorage.getStringList(_storageKeyPlayerList);
+    if (pl != null && pl.isNotEmpty) {
+      playerList.clear();
+      for (var e in pl) {
+        var data = jsonDecode(e) as Map<String, dynamic>;
+        playerList.add(
+          MusicItem(
+            id: data['id'],
+            name: data['name'],
+            cover: data['cover'],
+            author: data['author'],
+            duration: data['duration'],
+            origin: OriginType.getByValue(data['origin']),
+          ),
+        );
+      }
+    }
+
     notifyListeners();
   }
 }

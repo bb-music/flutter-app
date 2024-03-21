@@ -55,11 +55,11 @@ class PlayerCard extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ModeButton(size: 40),
+                  ModeButton(size: 30),
                   PrevButton(size: 40),
                   PlayButton(size: 60),
                   NextButton(size: 40),
-                  PlayerListButton(size: 40),
+                  PlayerListButton(size: 30),
                 ],
               )
             ],

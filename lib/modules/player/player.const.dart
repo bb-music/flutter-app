@@ -40,4 +40,8 @@ enum PlayerMode {
   final int value;
   final String name;
   final IconData icon;
+
+  static PlayerMode getByValue(int value) {
+    return values.firstWhere((element) => element.value == value);
+  }
 }

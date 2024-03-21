@@ -17,7 +17,7 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> {
   final ScrollController _scrollController = ScrollController();
-  final _keywordController = TextEditingController(text: "不问别离");
+  final _keywordController = TextEditingController(text: "周杰伦");
   int _current = 1;
   bool _loading = false;
   final List<SearchItem> _searchItemList = [];
@@ -154,7 +154,7 @@ class _SearchViewState extends State<SearchView> {
               },
             );
           }),
-      floatingActionButton: PlayerView(),
+      floatingActionButton: const PlayerView(),
     );
   }
 }

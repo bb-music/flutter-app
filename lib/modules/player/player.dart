@@ -1,9 +1,9 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.card.dart';
 import 'package:flutter_app/modules/player/player.const.dart';
 import 'package:flutter_app/modules/player/player.list.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 class PlayerView extends StatelessWidget {
@@ -125,7 +125,9 @@ class PrevButton extends StatelessWidget {
       builder: (context, player, child) {
         return IconButton(
           color: primaryColor,
-          onPressed: () {},
+          onPressed: () {
+            player.prev();
+          },
           iconSize: size,
           icon: const Icon(
             Icons.skip_previous,
@@ -151,7 +153,9 @@ class NextButton extends StatelessWidget {
         return IconButton(
           color: primaryColor,
           iconSize: size,
-          onPressed: () {},
+          onPressed: () {
+            player.next();
+          },
           icon: const Icon(
             Icons.skip_next,
           ),
@@ -205,15 +209,15 @@ class ModeButton extends StatelessWidget {
           iconSize: size,
           onPressed: () {
             player.togglePlayerMode(null);
-            Fluttertoast.showToast(
-              msg: "This is Center Short Toast",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0,
-            );
+            BotToast.showText(text: "${player.playerMode.name}模式");
+            // Fluttertoast.showToast(
+            //   msg: "${player.playerMode.name}模式",
+            //   // toastLength: Toast.LENGTH_SHORT,
+            //   // timeInSecForIosWeb: 1,
+            //   // backgroundColor: Colors.red,
+            //   // textColor: Colors.white,
+            //   fontSize: 16.0,
+            // );
           },
           icon: Icon(
             player.playerMode.icon,
@@ -230,7 +234,7 @@ Future<T?> showPlayerList<T>(BuildContext context) {
   return navigator.push(ModalBottomSheetRoute<T>(
     isScrollControlled: true,
     builder: (context) {
-      return PlayerList();
+      return const PlayerList();
     },
   ));
 }

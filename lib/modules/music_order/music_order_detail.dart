@@ -21,32 +21,36 @@ class MusicOrderDetail extends StatelessWidget {
             icon: const Icon(Icons.more_vert_outlined),
             tooltip: '更多操作',
             onPressed: () {
+              final player = Provider.of<PlayerModel>(context, listen: false);
               openBottomSheet(context, [
                 SheetItem(
                   title: const Text('播放全部'),
                   onPressed: () {
-                    Provider.of<PlayerModel>(context, listen: false)
-                      ..clearPlayerList()
-                      ..addPlayerList(data.musicList);
+                    player.clearPlayerList();
+                    player.addPlayerList(data.musicList);
+                    player.play(data.musicList[0]);
+                    Navigator.of(context).pop();
                   },
                 ),
                 SheetItem(
                   title: const Text('追加到播放列表'),
                   onPressed: () {
-                    Provider.of<PlayerModel>(context, listen: false)
-                        .addPlayerList(data.musicList);
+                    player.addPlayerList(data.musicList);
+                    Navigator.of(context).pop();
                   },
                 ),
                 SheetItem(
                   title: const Text('加入歌单'),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               ]);
             },
           )
         ],
       ),
-      floatingActionButton: PlayerView(),
+      floatingActionButton: const PlayerView(),
       body: ListView.builder(
           itemCount: data.musicList.length,
           itemBuilder: (context, index) {
