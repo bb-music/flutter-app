@@ -1,7 +1,7 @@
 import 'package:bot_toast/bot_toast.dart' show BotToastInit, BotToast;
 import 'package:flutter/material.dart';
+import 'package:flutter_app/modules/home/home.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
-import 'package:flutter_app/modules/search/search.dart';
 import 'package:provider/provider.dart';
 
 // toast 初始化
@@ -28,7 +28,7 @@ void main() {
       child: MaterialApp(
         title: '哔哔音乐',
         theme: theme,
-        home: const SearchView(),
+        home: const HomeView(),
         builder: (context, child) {
           // 设置 toast 默认值
           BotToast.defaultOption.text.textStyle = TextStyle(

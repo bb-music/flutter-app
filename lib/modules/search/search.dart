@@ -185,7 +185,7 @@ class _SearchForm extends StatelessWidget {
               controller: keywordController,
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                hintText: "请输入歌曲/歌单名搜索",
+                hintText: "请输入歌曲/歌单名",
                 contentPadding: EdgeInsets.symmetric(horizontal: 25),
               ),
             ),

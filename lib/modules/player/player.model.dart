@@ -14,10 +14,9 @@ const _storageKeyPlayerList = 'player_player_list';
 const _storageKeyHistoryList = 'player_history_list';
 const _storageKeyPlayerMode = 'player_player_mode';
 
-// 计时器
-Timer? _timer;
-
 class PlayerModel extends ChangeNotifier {
+  // 计时器
+  Timer? _timer;
   // 播放器实例
   final audio = audioplayers.AudioPlayer();
   // 当前歌曲
