@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 
 class PlayerCard extends StatelessWidget {
+  const PlayerCard({super.key});
   @override
   Widget build(BuildContext context) {
     double coverWidth = MediaQuery.of(context).size.width - 200;
     return Consumer<PlayerModel>(
       builder: (context, player, child) {
         return SizedBox(
-          height: MediaQuery.of(context).size.width + 200,
+          height: MediaQuery.of(context).size.width + 100,
           child: Column(
             children: [
+              // 歌曲名称
               Container(
                 padding: const EdgeInsets.only(
-                  top: 20,
+                  // top: 20,
                   left: 30,
                   right: 30,
-                  bottom: 30,
+                  bottom: 20,
                 ),
                 child: Text(
                   player.current!.name,
@@ -28,6 +31,7 @@ class PlayerCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // 封面
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
@@ -37,6 +41,7 @@ class PlayerCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
+              // 下载，添加到歌单
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -52,6 +57,9 @@ class PlayerCard extends StatelessWidget {
                   ),
                 ],
               ),
+              // 进度
+              const PlayerProgress(),
+              // 播放模式、上一首，下一首，播放，列表
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -67,5 +75,91 @@ class PlayerCard extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class PlayerProgress extends StatefulWidget {
+  const PlayerProgress({
+    super.key,
+  });
+
+  @override
+  State<PlayerProgress> createState() => _PlayerProgressState();
+}
+
+class _PlayerProgressState extends State<PlayerProgress> {
+  double _value = 0;
+  bool _isChanged = false;
+
+  @override
+  void initState() {
+    final player = Provider.of<PlayerModel>(context, listen: false);
+    super.initState();
+
+    player.audio.positionStream.listen((event) {
+      if (_isChanged || !mounted) return;
+      double c = event.inSeconds.toDouble();
+      double total = player.audio.duration?.inSeconds.toDouble() ?? 0.0;
+      double v = c / total;
+      if (v.isNaN) return;
+      if (v > 1.0) {
+        v = 1.0;
+      }
+      if (v < 0.0) {
+        v = 0;
+      }
+      setState(() {
+        _value = v;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PlayerModel>(builder: (context, player, child) {
+      int total = (player.audio.duration?.inSeconds ?? 0);
+      return Column(
+        children: [
+          Slider(
+            value: _value,
+            onChanged: (v) {
+              setState(() {
+                _value = v;
+              });
+            },
+            onChangeStart: (value) {
+              setState(() {
+                _isChanged = true;
+              });
+            },
+            onChangeEnd: (value) {
+              final player = Provider.of<PlayerModel>(context, listen: false);
+              int v = (value * total).toInt();
+              player.audio.seek(Duration(seconds: v));
+              setState(() {
+                _isChanged = false;
+              });
+            },
+          ),
+          Container(
+            padding: const EdgeInsets.only(left: 24.0, right: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  seconds2duration((_value * total).toInt()),
+                ),
+                Text(seconds2duration(total)),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
   }
 }

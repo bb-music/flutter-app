@@ -88,9 +88,9 @@ class PlayerList extends StatelessWidget {
                                 Text(seconds2duration(item.duration)),
                               ],
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.more_vert),
-                              onPressed: () {
+                            trailing: InkWell(
+                              child: const Icon(Icons.more_vert),
+                              onTap: () {
                                 showItemSheet(context, item);
                               },
                             ),

@@ -13,7 +13,7 @@ class SheetItem {
 }
 
 void openBottomSheet(BuildContext context, List<SheetItem> items) {
-  double height = 50;
+  double height = 30;
 
   for (var _ in items) {
     height += 56; // 每个选项的高度
@@ -21,25 +21,12 @@ void openBottomSheet(BuildContext context, List<SheetItem> items) {
 
   showModalBottomSheet(
     context: context,
+    showDragHandle: true,
     builder: (BuildContext context) {
       return SizedBox(
         height: height,
         child: ListView(
           children: [
-            Center(
-              child: Container(
-                padding: const EdgeInsets.only(top: 13, bottom: 13),
-                height: 30,
-                child: Container(
-                  width: 30,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-              ),
-            ),
             ...items.toList().map((e) {
               return ListTile(
                 leading: e.icon,
