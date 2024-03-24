@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 
 abstract class UserMusicOrderOrigin {
-  late final String name;
-  late final String cname;
-  late final Widget? configWidget;
+  String get name => '';
+  String get cname => '';
+  IconData? get icon => null;
+
+  Widget? configBuild();
+
+  /// 初始化所需配置
+  Future<void> initConfig();
 
   /// 获取歌单列表
   Future<List<MusicOrderItem>> getList();

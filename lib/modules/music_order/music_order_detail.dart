@@ -52,6 +52,7 @@ class MusicOrderDetail extends StatelessWidget {
       ),
       floatingActionButton: const PlayerView(),
       body: ListView.builder(
+          padding: const EdgeInsets.only(bottom: 100),
           itemCount: data.musicList.length,
           itemBuilder: (context, index) {
             if (data.musicList.isEmpty) return null;

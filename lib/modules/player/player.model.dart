@@ -237,7 +237,7 @@ class PlayerModel extends ChangeNotifier {
         PlayerMode.signalLoop,
         PlayerMode.listLoop,
         PlayerMode.random,
-        PlayerMode.listLoop,
+        PlayerMode.listOrder,
       ];
       int index = l.indexWhere((p) => playerMode == p);
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/modules/music_order/music_order_list.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/search/search.dart';
+import 'package:flutter_app/modules/setting/setting.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -51,7 +53,7 @@ class HomeView extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (BuildContext context) {
-                      return const SearchView();
+                      return const UserMusicOrderView();
                     },
                   ),
                 );
@@ -64,7 +66,7 @@ class HomeView extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (BuildContext context) {
-                      return const SearchView();
+                      return const SettingView();
                     },
                   ),
                 );

@@ -6,6 +6,7 @@ class SettingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
@@ -13,7 +14,21 @@ class SettingView extends StatelessWidget {
       body: Column(
         children: [
           ...userMusicOrderOrigin.map((e) {
-            return e.configWidget ?? const SizedBox();
+            final configWidget = e.configBuild();
+            if (configWidget == null) return const SizedBox();
+            return ListTile(
+              title: Text('${e.cname} 歌单源设置'),
+              leading: Icon(e.icon),
+              onTap: () {
+                navigator.push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return configWidget;
+                    },
+                  ),
+                );
+              },
+            );
           }),
         ],
       ),
