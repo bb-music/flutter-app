@@ -17,7 +17,7 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> {
   final ScrollController _scrollController = ScrollController();
-  final _keywordController = TextEditingController(text: "周杰伦");
+  final _keywordController = TextEditingController(text: "");
   int _current = 1;
   bool _loading = false;
   final List<SearchItem> _searchItemList = [];
@@ -73,6 +73,7 @@ class _SearchViewState extends State<SearchView> {
     var player = Provider.of<PlayerModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: _SearchForm(
           keywordController: _keywordController,
           onSearch: () {
@@ -171,38 +172,56 @@ class _SearchForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: Colors.grey,
-              ),
-            ),
-            child: TextField(
-              controller: keywordController,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: "请输入歌曲/歌单名",
-                contentPadding: EdgeInsets.symmetric(horizontal: 25),
-              ),
-            ),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.grey,
         ),
-        Positioned(
-          right: 7,
-          bottom: 5,
-          child: SizedBox(
-            height: 40,
-            child: FilledButton(
-              onPressed: onSearch,
-              child: const Text("搜 索"),
-            ),
-          ),
-        )
-      ],
+      ),
+      child: TextField(
+        controller: keywordController,
+        onSubmitted: (value) => onSearch(),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          hintText: "请输入歌曲/歌单名",
+          contentPadding: EdgeInsets.symmetric(horizontal: 25),
+        ),
+      ),
+
+      // child: Stack(
+      //   children: [
+      //     Expanded(
+      //       child: Container(
+      //         decoration: BoxDecoration(
+      //           borderRadius: BorderRadius.circular(25),
+      //           border: Border.all(
+      //             color: Colors.grey,
+      //           ),
+      //         ),
+      //         child: TextField(
+      //           controller: keywordController,
+      //           decoration: const InputDecoration(
+      //             border: InputBorder.none,
+      //             hintText: "请输入歌曲/歌单名",
+      //             contentPadding: EdgeInsets.symmetric(horizontal: 25),
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //     Positioned(
+      //       right: 7,
+      //       bottom: 5,
+      //       child: SizedBox(
+      //         height: 40,
+      //         child: FilledButton(
+      //           onPressed: onSearch,
+      //           child: const Text("搜 索"),
+      //         ),
+      //       ),
+      //     )
+      //   ],
+      // ),
     );
   }
 }

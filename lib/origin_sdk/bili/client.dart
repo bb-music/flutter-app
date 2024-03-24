@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_app/origin_sdk/bili/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -172,13 +173,18 @@ class BiliClient implements OriginService {
 
   /// 请求封装
   Future<http.Response> _request(Uri uri) async {
-    return await http.get(
-      uri,
-      headers: {
-        "UserAgent": _userAgent,
-        "cookie": "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};",
-        "Referer": "https://www.bilibili.com/"
-      },
-    );
+    try {
+      return await http.get(
+        uri,
+        headers: {
+          "UserAgent": _userAgent,
+          "cookie": "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};",
+          "Referer": "https://www.bilibili.com/"
+        },
+      );
+    } catch (e) {
+      BotToast.showText(text: '请求失败: $e');
+      throw Exception('请求失败: $e');
+    }
   }
 }

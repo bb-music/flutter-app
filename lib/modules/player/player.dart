@@ -229,13 +229,10 @@ class ModeButton extends StatelessWidget {
 }
 
 /// 显示播放列表
-Future<T?> showPlayerList<T>(BuildContext context) {
+Future showPlayerList(BuildContext context) {
   final NavigatorState navigator = Navigator.of(context, rootNavigator: false);
-  double h = MediaQuery.of(context).size.height - 80;
-  return navigator.push(ModalBottomSheetRoute<T>(
+  return navigator.push(ModalBottomSheetRoute(
     isScrollControlled: true,
-    // showDragHandle: true,
-    // constraints: BoxConstraints(maxHeight: h),
     builder: (context) {
       return const PlayerList();
     },
@@ -243,10 +240,11 @@ Future<T?> showPlayerList<T>(BuildContext context) {
 }
 
 /// 显示播放卡片
-Future<T?> showPlayerCard<T>(BuildContext context) {
+Future<void>? showPlayerCard(BuildContext context) {
   final NavigatorState navigator = Navigator.of(context, rootNavigator: false);
-  // double h = MediaQuery.of(context).size.height - 200;
-  return navigator.push(ModalBottomSheetRoute<T>(
+  final player = Provider.of<PlayerModel>(context, listen: false);
+  if (player.current == null) return null;
+  return navigator.push(ModalBottomSheetRoute(
     isScrollControlled: true,
     showDragHandle: true,
     builder: (context) {

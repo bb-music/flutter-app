@@ -8,11 +8,11 @@ class PlayerCard extends StatelessWidget {
   const PlayerCard({super.key});
   @override
   Widget build(BuildContext context) {
-    double coverWidth = MediaQuery.of(context).size.width - 200;
+    double coverWidth = 160;
     return Consumer<PlayerModel>(
       builder: (context, player, child) {
         return SizedBox(
-          height: MediaQuery.of(context).size.width + 100,
+          height: 440,
           child: Column(
             children: [
               // 歌曲名称
