@@ -115,4 +115,106 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
     list.removeAt(index);
     return _update(list);
   }
+
+  @override
+  getDetail(id) async {
+    final list = await getList();
+    final index = list.indexWhere((r) => r.id == id);
+    if (index < 0) {
+      throw Exception("歌单不存在");
+    }
+    return list[index];
+  }
+
+  @override
+  appendMusic(id, musics) async {
+    final list = await _loadData();
+    final index = list.indexWhere((e) => e.id == id);
+    final current = list[index];
+    // 判断歌单是否已存在
+    if (index < 0) {
+      throw Exception('歌单不存在');
+    }
+    List<String> mids = musics.map((e) => e.id).toList();
+    current.musicList.removeWhere((m) => mids.contains(m.id));
+    current.musicList.addAll(musics);
+
+    // 替换 list 指定位置的值
+    list[index] = MusicOrderItem(
+      id: current.id,
+      name: current.name,
+      cover: current.cover,
+      desc: current.desc,
+      author: current.author,
+      musicList: current.musicList,
+    );
+
+    return _update(list);
+  }
+
+  @override
+  updateMusic(id, musics) async {
+    final list = await _loadData();
+    final index = list.indexWhere((e) => e.id == id);
+    final current = list[index];
+    // 判断歌单是否已存在
+    if (index < 0) {
+      throw Exception('歌单不存在');
+    }
+
+    List<String> mids = musics.map((e) => e.id).toList();
+
+    final newList = current.musicList.map((m) {
+      if (mids.contains(m.id)) {
+        final c = musics.firstWhere((e) => e.id == m.id);
+        return MusicItem(
+          name: c.name,
+          cover: m.cover,
+          id: m.id,
+          duration: m.duration,
+          author: m.author,
+          origin: m.origin,
+        );
+      }
+      return m;
+    }).toList();
+
+    // 替换 list 指定位置的值
+    list[index] = MusicOrderItem(
+      id: current.id,
+      name: current.name,
+      cover: current.cover,
+      desc: current.desc,
+      author: current.author,
+      musicList: newList,
+    );
+
+    return _update(list);
+  }
+
+  @override
+  deleteMusic(id, musics) async {
+    final list = await _loadData();
+    final index = list.indexWhere((e) => e.id == id);
+    final current = list[index];
+    // 判断歌单是否已存在
+    if (index < 0) {
+      throw Exception('歌单不存在');
+    }
+
+    List<String> mids = musics.map((e) => e.id).toList();
+    current.musicList.removeWhere((m) => mids.contains(m.id));
+
+    // 替换 list 指定位置的值
+    list[index] = MusicOrderItem(
+      id: current.id,
+      name: current.name,
+      cover: current.cover,
+      desc: current.desc,
+      author: current.author,
+      musicList: current.musicList,
+    );
+
+    return _update(list);
+  }
 }

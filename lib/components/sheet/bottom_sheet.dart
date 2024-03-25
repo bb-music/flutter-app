@@ -13,11 +13,7 @@ class SheetItem {
 }
 
 void openBottomSheet(BuildContext context, List<SheetItem> items) {
-  double height = 30;
-
-  for (var _ in items) {
-    height += 56; // 每个选项的高度
-  }
+  double height = 30 + (46 * items.length).toDouble();
 
   showModalBottomSheet(
     context: context,

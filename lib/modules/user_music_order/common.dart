@@ -27,15 +27,15 @@ abstract class UserMusicOrderOrigin {
   /// 删除歌单
   Future<void> delete(MusicOrderItem item);
 
-  // /// 歌单详情
-  // Future<MusicOrderItem> getDetail(String id);
+  /// 歌单详情
+  Future<MusicOrderItem> getDetail(String id);
 
-  // /// 添加歌曲
-  // Future<MusicOrderItem> appendMusic(String id, List<MusicOrderItem> musics);
+  /// 添加歌曲
+  Future<void> appendMusic(String id, List<MusicItem> musics);
 
-  // /// 更新歌曲
-  // Future<MusicOrderItem> updateMusic(String id, List<MusicOrderItem> musics);
+  /// 更新歌曲
+  Future<void> updateMusic(String id, List<MusicItem> musics);
 
-  // /// 移除歌曲
-  // Future<MusicOrderItem> deleteMusic(String id, List<MusicOrderItem> musics);
+  /// 移除歌曲
+  Future<void> deleteMusic(String id, List<MusicItem> musics);
 }

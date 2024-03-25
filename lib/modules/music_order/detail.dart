@@ -67,8 +67,46 @@ class MusicOrderDetail extends StatelessWidget {
               onTap: () {
                 Provider.of<PlayerModel>(context, listen: false).play(item);
               },
+              trailing: InkWell(
+                child: const Icon(Icons.more_vert),
+                onTap: () {
+                  showItemSheet(context, item);
+                },
+              ),
             );
           }),
     );
   }
+}
+
+void showItemSheet(BuildContext context, MusicItem data) {
+  openBottomSheet(context, [
+    SheetItem(
+      title: Text(
+        data.name,
+        style: TextStyle(
+          color: Theme.of(context).hintColor,
+          fontWeight: FontWeight.bold,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ),
+    SheetItem(
+        title: const Text('播放'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false).play(data);
+          Navigator.of(context).pop();
+        }),
+    SheetItem(
+        title: const Text('添加到歌单'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false)
+              .removePlayerList([data]);
+          Navigator.of(context).pop();
+        }),
+    SheetItem(
+      title: const Text('下载'),
+      onPressed: () {},
+    ),
+  ]);
 }

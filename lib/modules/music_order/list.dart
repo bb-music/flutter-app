@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/components/sheet/bottom_sheet.dart';
 import 'package:flutter_app/modules/music_order/detail.dart';
 import 'package:flutter_app/modules/music_order/model.dart';
-import 'package:flutter_app/modules/setting/setting.dart';
 import 'package:flutter_app/modules/user_music_order/common.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
@@ -36,8 +35,17 @@ class UserMusicOrderView extends StatelessWidget {
 
 class _MusicOrderListView extends StatefulWidget {
   final UserMusicOrderOriginItem umo;
+  // 是否为适用于收藏模式的样式
+  final bool? collectModalStyle;
+  // 点击每个选项时的回调
+  final Function(UserMusicOrderOriginItem, MusicOrderItem data)? onItemTap;
 
-  const _MusicOrderListView({super.key, required this.umo});
+  const _MusicOrderListView({
+    super.key,
+    this.collectModalStyle,
+    this.onItemTap,
+    required this.umo,
+  });
 
   @override
   _MusicOrderListViewState createState() => _MusicOrderListViewState();
@@ -150,7 +158,16 @@ class _MusicOrderListViewState extends State<_MusicOrderListView> {
                       }
 
                       return ListTile(
-                        onTap: gotoDetail,
+                        onTap: () {
+                          if (widget.collectModalStyle == true) {
+                            if (widget.onItemTap != null) {
+                              widget.onItemTap!(widget.umo, item);
+                            }
+                            return;
+                          }
+
+                          gotoDetail();
+                        },
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: item.cover != null && item.cover!.isNotEmpty
@@ -172,6 +189,7 @@ class _MusicOrderListViewState extends State<_MusicOrderListView> {
                             ? Text(item.desc)
                             : const Text('-'),
                         onLongPress: () {
+                          if (widget.collectModalStyle) return;
                           openBottomSheet(context, [
                             SheetItem(
                               title: const Text('查看歌单'),
@@ -302,4 +320,14 @@ class _EditMusicOrderState extends State<EditMusicOrder> {
       ),
     );
   }
+}
+
+// 收藏到歌单
+collectToMusicOrder(BuildContext context, List<MusicItem> musics) {
+  showModalBottomSheet(
+    context: context,
+    builder: (ctx) {
+      return ListView();
+    },
+  );
 }
