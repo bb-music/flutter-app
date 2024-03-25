@@ -1,6 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/music_order/music_order_list.dart';
+import 'package:flutter_app/modules/music_order/list.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/search/search.dart';
 import 'package:flutter_app/modules/setting/setting.dart';
@@ -18,8 +18,7 @@ class HomeView extends StatelessWidget {
       floatingActionButton: const PlayerView(),
       body: Container(
         padding: const EdgeInsets.only(bottom: 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: ListView(
           children: [
             _ItemCard(
               icon: Icons.search,

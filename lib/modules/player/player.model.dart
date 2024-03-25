@@ -32,7 +32,7 @@ class PlayerModel extends ChangeNotifier {
   // 播放模式
   PlayerMode playerMode = PlayerMode.listLoop;
 
-  PlayerModel() {
+  init() {
     _initLocalStorage();
     audio.playerStateStream.listen((state) {
       print("====== START =======");

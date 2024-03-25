@@ -22,7 +22,7 @@ void openBottomSheet(BuildContext context, List<SheetItem> items) {
   showModalBottomSheet(
     context: context,
     showDragHandle: true,
-    builder: (BuildContext context) {
+    builder: (BuildContext ctx) {
       return SizedBox(
         height: height,
         child: ListView(
@@ -31,7 +31,12 @@ void openBottomSheet(BuildContext context, List<SheetItem> items) {
               return ListTile(
                 leading: e.icon,
                 title: e.title,
-                onTap: e.onPressed,
+                onTap: e.onPressed != null
+                    ? () {
+                        Navigator.of(context).pop();
+                        e.onPressed!();
+                      }
+                    : null,
               );
             })
           ],

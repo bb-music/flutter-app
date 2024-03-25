@@ -95,6 +95,17 @@ class MusicItem {
     required this.origin,
   });
 
+  factory MusicItem.fromJson(Map<String, dynamic> json) {
+    return MusicItem(
+      id: json["id"],
+      cover: json["cover"],
+      name: json["name"],
+      duration: json["duration"],
+      author: json["author"],
+      origin: OriginType.getByValue(json["origin"]),
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       "id": id,
@@ -128,6 +139,36 @@ class MusicOrderItem {
     this.createdAt,
     this.updatedAt,
   });
+
+  factory MusicOrderItem.fromJson(Map<String, dynamic> json) {
+    final List<MusicItem> musicList = [];
+    for (var item in json["musicList"]) {
+      musicList.add(MusicItem.fromJson(item));
+    }
+    return MusicOrderItem(
+      id: json["id"],
+      name: json["name"],
+      desc: json["desc"],
+      author: json["author"],
+      musicList: musicList,
+      cover: json["cover"],
+      createdAt: json["createdAt"],
+      updatedAt: json["updatedAt"],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "name": name,
+      "desc": desc,
+      "author": author,
+      "musicList": musicList.map((e) => e.toJson()).toList(),
+      "cover": cover,
+      "createdAt": createdAt,
+      "updatedAt": updatedAt,
+    };
+  }
 }
 
 /// 歌曲详情

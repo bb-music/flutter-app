@@ -1,7 +1,7 @@
 // import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/components/text_tags/tags.dart';
-import 'package:flutter_app/modules/music_order/music_order_detail.dart';
+import 'package:flutter_app/modules/music_order/detail.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';

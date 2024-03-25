@@ -169,7 +169,7 @@ class NextButton extends StatelessWidget {
 class PlayerListButton extends StatelessWidget {
   final double? size;
 
-  const PlayerListButton({this.size = 30.0});
+  const PlayerListButton({super.key, this.size = 30.0});
 
   @override
   Widget build(BuildContext context) {
