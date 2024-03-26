@@ -24,6 +24,7 @@ class UserMusicOrderModel extends ChangeNotifier {
     if (index < 0) return;
     final current = dataList[index];
     await _loadItem(current);
+    notifyListeners();
   }
 
   Future<void> _loadItem(

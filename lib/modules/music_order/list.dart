@@ -174,12 +174,10 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Text(
-              widget.umo.service.cname,
-              style: const TextStyle(
-                fontSize: 18,
-              ),
+          Text(
+            widget.umo.service.cname,
+            style: const TextStyle(
+              fontSize: 18,
             ),
           ),
           Visibility(
@@ -199,14 +197,45 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
   // 列表
   Widget _listBuild(List<MusicOrderItem> list) {
     if (!_canUse) _emptyBuild();
-    return ListView(
+    return Column(
       children: list.map((item) {
         gotoDetail() {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (BuildContext context) {
-              return MusicOrderDetail(data: item);
+              return MusicOrderDetail(
+                data: item,
+                umoService: widget.umo.service,
+              );
             },
           ));
+        }
+
+        moreHandler() {
+          if (widget.collectModalStyle == true) return;
+          openBottomSheet(context, [
+            SheetItem(
+              title: const Text('查看歌单'),
+              onPressed: gotoDetail,
+            ),
+            SheetItem(
+              title: const Text('编辑歌单'),
+              onPressed: () {
+                _formItemHandler(item);
+              },
+            ),
+            SheetItem(
+              title: const Text('删除歌单'),
+              onPressed: () {
+                widget.umo.service.delete(item).then((value) {
+                  BotToast.showSimpleNotification(title: "已删除");
+                  Provider.of<UserMusicOrderModel>(
+                    context,
+                    listen: false,
+                  ).load(widget.umo.service.name);
+                });
+              },
+            ),
+          ]);
         }
 
         return ListTile(
@@ -237,49 +266,23 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
           ),
           title: Text(item.name),
           subtitle: item.desc.isNotEmpty ? Text(item.desc) : const Text('-'),
-          onLongPress: () {
-            if (widget.collectModalStyle == true) return;
-            openBottomSheet(context, [
-              SheetItem(
-                title: const Text('查看歌单'),
-                onPressed: gotoDetail,
-              ),
-              SheetItem(
-                title: const Text('编辑歌单'),
-                onPressed: () {
-                  _formItemHandler(item);
-                },
-              ),
-              SheetItem(
-                title: const Text('删除歌单'),
-                onPressed: () {
-                  widget.umo.service.delete(item).then((value) {
-                    BotToast.showSimpleNotification(title: "已删除");
-                    Provider.of<UserMusicOrderModel>(
-                      context,
-                      listen: false,
-                    ).load(widget.umo.service.name);
-                  });
-                },
-              ),
-            ]);
-          },
+          trailing: InkWell(
+            borderRadius: BorderRadius.circular(4.0),
+            onTap: moreHandler,
+            child: const Icon(Icons.more_vert),
+          ),
+          onLongPress: moreHandler,
         );
       }).toList(),
     );
   }
 
   Widget _container(double height, Widget child) {
-    return SizedBox(
-      height: height,
-      child: Column(
-        children: [
-          _headerBuild(),
-          Expanded(
-            child: child,
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        _headerBuild(),
+        child,
+      ],
     );
   }
 
@@ -288,9 +291,9 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
     return FutureBuilder(
       future: widget.umo.list,
       builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.done) {
+        if (snap.connectionState == ConnectionState.done && snap.data != null) {
           final list = snap.data!;
-          return _container(list.length * 65 + 70, _listBuild(list));
+          return _container(list.length * 70 + 70, _listBuild(list));
         }
         if (snap.hasError) {
           return _container(130, _errorBuild());

@@ -35,9 +35,9 @@ class PlayerModel extends ChangeNotifier {
   init() {
     _initLocalStorage();
     audio.playerStateStream.listen((state) {
-      print("====== START =======");
-      print(state);
-      print("====== END ========");
+      // print("====== START =======");
+      // print(state);
+      // print("====== END ========");
       if (state.playing) {
         _setStatus(PlayerStatus.play);
       } else {

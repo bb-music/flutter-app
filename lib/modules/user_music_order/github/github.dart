@@ -200,11 +200,11 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     final res = await _loadData();
     final list = res.content;
     final index = list.indexWhere((e) => e.id == id);
-    final current = list[index];
     // 判断歌单是否已存在
     if (index < 0) {
       throw Exception('歌单不存在');
     }
+    final current = list[index];
     List<String> mids = musics.map((e) => e.id).toList();
     current.musicList.removeWhere((m) => mids.contains(m.id));
     current.musicList.addAll(musics);
@@ -227,12 +227,11 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     final res = await _loadData();
     final list = res.content;
     final index = list.indexWhere((e) => e.id == id);
-    final current = list[index];
     // 判断歌单是否已存在
     if (index < 0) {
       throw Exception('歌单不存在');
     }
-
+    final current = list[index];
     List<String> mids = musics.map((e) => e.id).toList();
 
     final newList = current.musicList.map((m) {
@@ -268,12 +267,11 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     final res = await _loadData();
     final list = res.content;
     final index = list.indexWhere((e) => e.id == id);
-    final current = list[index];
     // 判断歌单是否已存在
     if (index < 0) {
       throw Exception('歌单不存在');
     }
-
+    final current = list[index];
     List<String> mids = musics.map((e) => e.id).toList();
     current.musicList.removeWhere((m) => mids.contains(m.id));
 

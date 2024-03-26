@@ -89,6 +89,7 @@ class PlayerList extends StatelessWidget {
                               ],
                             ),
                             trailing: InkWell(
+                              borderRadius: BorderRadius.circular(4.0),
                               child: const Icon(Icons.more_vert),
                               onTap: () {
                                 showItemSheet(context, item);
