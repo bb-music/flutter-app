@@ -246,7 +246,6 @@ Future<void>? showPlayerCard(BuildContext context) {
   if (player.current == null) return null;
   return navigator.push(ModalBottomSheetRoute(
     isScrollControlled: true,
-    showDragHandle: true,
     builder: (context) {
       return const PlayerCard();
     },

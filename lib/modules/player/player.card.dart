@@ -11,14 +11,21 @@ class PlayerCard extends StatelessWidget {
     double coverWidth = 160;
     return Consumer<PlayerModel>(
       builder: (context, player, child) {
-        return SizedBox(
-          height: 440,
+        return Container(
+          height: 460,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.background,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
           child: Column(
             children: [
               // 歌曲名称
               Container(
                 padding: const EdgeInsets.only(
-                  // top: 20,
+                  top: 20,
                   left: 30,
                   right: 30,
                   bottom: 20,
