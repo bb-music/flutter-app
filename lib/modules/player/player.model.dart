@@ -285,14 +285,8 @@ class PlayerModel extends ChangeNotifier {
     if (id != null) {
       MusicUrl musicUrl = await service.getMusicUrl(id);
       audio.setUrl(musicUrl.url, headers: musicUrl.headers);
-    } else {
-      if (audio.audioSource == null && current == null) {
-        return;
-      }
-      print('无音源时使用 current');
-      MusicUrl musicUrl = await service.getMusicUrl(current!.id);
-      audio.setUrl(musicUrl.url, headers: musicUrl.headers);
     }
+
     audio.play();
   }
 
