@@ -104,17 +104,19 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       utf8.encode(jsonStr),
     );
 
+    Map<String, String> body = {
+      'message': message,
+      'sha': sha,
+      'content': content,
+    };
+    if (branch.isNotEmpty) {
+      body['branch'] = branch;
+    }
+
     final response = await http.put(
       _path,
       headers: _headers,
-      body: json.encode(
-        {
-          'message': message,
-          'sha': sha,
-          'content': content,
-          'branch': branch,
-        },
-      ),
+      body: json.encode(body),
     );
 
     if (response.statusCode != 200) {

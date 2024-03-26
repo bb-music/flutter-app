@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/components/sheet/bottom_sheet.dart';
 import 'package:flutter_app/components/text_tags/tags.dart';
+import 'package:flutter_app/modules/music_order/list.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/player/player.model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
@@ -100,9 +101,7 @@ void showItemSheet(BuildContext context, MusicItem data) {
     SheetItem(
         title: const Text('添加到歌单'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false)
-              .removePlayerList([data]);
-          Navigator.of(context).pop();
+          collectToMusicOrder(context, [data]);
         }),
     SheetItem(
       title: const Text('下载'),

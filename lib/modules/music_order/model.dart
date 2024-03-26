@@ -3,43 +3,57 @@ import 'package:flutter_app/modules/user_music_order/common.dart';
 import 'package:flutter_app/modules/user_music_order/user_music_order.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 
+final _defaultDataList = userMusicOrderOrigin
+    .map((e) => UserMusicOrderOriginItem(
+          service: e,
+        ))
+    .toList();
+
 class UserMusicOrderModel extends ChangeNotifier {
-  final List<UserMusicOrderOriginItem> dataList = [];
+  final List<UserMusicOrderOriginItem> dataList = _defaultDataList;
 
   init() async {
-    dataList.clear();
-    final res = await Future.wait(
-      userMusicOrderOrigin.map((s) => _loadItem(s)),
+    await Future.wait(
+      dataList.map((s) => _loadItem(s)),
     );
-    dataList.addAll(res);
-    notifyListeners();
   }
 
   // 重载单个源的列表
   load(String originName) async {
     final index = dataList.indexWhere((d) => d.service.name == originName);
-    if (index < 0) {
-      return;
-    }
+    if (index < 0) return;
     final current = dataList[index];
-    final service = current.service;
-    final newList = await service.getList();
-    current.list.clear();
-    current.list.addAll(newList);
-    notifyListeners();
+    await _loadItem(current);
   }
 
-  Future<UserMusicOrderOriginItem> _loadItem(
-    UserMusicOrderOrigin service,
+  Future<void> _loadItem(
+    UserMusicOrderOriginItem umo,
   ) async {
-    await service.initConfig();
-    final list = await service.getList();
-    return UserMusicOrderOriginItem(service: service, list: list);
+    umo.loading = true;
+    try {
+      await umo.service.initConfig();
+      umo.list = umo.service.getList();
+    } catch (e) {
+      rethrow;
+    }
+    umo.loading = true;
+    notifyListeners();
   }
 }
 
+Future<List<MusicOrderItem>> initializeList() async {
+  await Future.delayed(const Duration(seconds: 0));
+  List<MusicOrderItem> initialItems = [];
+  return initialItems;
+}
+
 class UserMusicOrderOriginItem {
+  bool loading = false;
+  Future<List<MusicOrderItem>>? list = initializeList();
   final UserMusicOrderOrigin service;
-  final List<MusicOrderItem> list;
-  const UserMusicOrderOriginItem({required this.service, required this.list});
+  UserMusicOrderOriginItem({
+    this.loading = false,
+    this.list,
+    required this.service,
+  });
 }
