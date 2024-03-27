@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/music_order/list.dart';
+import 'package:flutter_app/modules/open_music_order/config_view.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/search/search.dart';
 import 'package:flutter_app/modules/setting/setting.dart';
@@ -37,7 +38,13 @@ class HomeView extends StatelessWidget {
               icon: Icons.diversity_2,
               title: '广场',
               onTap: () {
-                BotToast.showText(text: '开发中');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return const OpenMusicOrderConfigView();
+                    },
+                  ),
+                );
               },
             ),
             _ItemCard(
