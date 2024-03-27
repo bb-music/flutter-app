@@ -41,6 +41,7 @@ dependencies:
   just_audio: ^0.9.36
   bot_toast: ^4.1.3
   uuid: ^4.3.3
+  logger: ^2.2.0
 
 dev_dependencies:
   flutter_test:

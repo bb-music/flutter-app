@@ -1,5 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_app/origin_sdk/bili/utils.dart';
+import 'package:flutter_app/utils/logs.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -9,6 +10,7 @@ import './types.dart';
 
 const _userAgent =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const _referer = "https://www.bilibili.com/";
 const _cacheCreatedAtKey = "bili_catch_created_at";
 const _signImgKey = "bili_sign_img_key";
 const _signSubKey = "bili_sign_sub_key";
@@ -68,7 +70,8 @@ class BiliClient implements OriginService {
     if (response.statusCode == 200) {
       return SignData.fromJson(json.decode(response.body));
     } else {
-      throw Exception('获取哔哩哔哩签名秘钥失败');
+      logs.e("bili: 获取签名秘钥失败", error: {"body": response.body});
+      throw response.body;
     }
   }
 
@@ -81,7 +84,8 @@ class BiliClient implements OriginService {
     if (response.statusCode == 200) {
       return SpiData.fromJson(json.decode(response.body));
     } else {
-      throw Exception('获取哔哩哔哩 spi 唯一标识失败');
+      logs.e("bili: 获取 spi 唯一标识失败", error: {"body": response.body});
+      throw response.body;
     }
   }
 
@@ -102,7 +106,11 @@ class BiliClient implements OriginService {
     if (response.statusCode == 200) {
       return BiliSearchResponse.fromJson(json.decode(response.body));
     } else {
-      throw Exception('搜索失败');
+      logs.e(
+        "bili: 搜索失败",
+        error: {"body": response.body, 'params': params},
+      );
+      throw response.body;
     }
   }
 
@@ -123,7 +131,11 @@ class BiliClient implements OriginService {
       final data = json.decode(response.body)['data'];
       return BiliSearchItem.fromJson(data);
     } else {
-      throw Exception('搜索详情获取失败');
+      logs.e(
+        "bili: 搜索条目详情获取失败",
+        error: {"body": response.body, 'id': id},
+      );
+      throw response.body;
     }
   }
 
@@ -132,6 +144,11 @@ class BiliClient implements OriginService {
     BiliId biliid = BiliId.unicode(id);
     if (biliid.cid == null || biliid.cid == '') {
       // 歌曲 ID 不正确 缺少 CID
+      logs.e("bili: 歌曲 ID 不正确 缺少 CID", error: {
+        "id": id,
+        "biliid": biliid,
+      });
+      throw Exception('歌曲 ID 不正确 缺少 CID');
     }
     await init();
     const url = 'https://api.bilibili.com/x/player/wbi/playurl';
@@ -152,14 +169,16 @@ class BiliClient implements OriginService {
       if (durl != null && durl.isNotEmpty) {
         url = durl[0]['url'];
       }
-      // url =
-      //     "https://m801.music.126.net/20240319174904/19277e739010760b762322ffc3cdc891/jdyyaac/0452/0e52/005a/38fd0f464c988606826170c2399c1534.m4a";
       return MusicUrl(
         url: url,
-        headers: {'Referer': 'https://www.bilibili.com/'},
+        headers: {'Referer': _referer},
       );
     } else {
-      throw Exception('获取音乐播放地址失败');
+      logs.e(
+        "bili: 获取音乐播放地址失败",
+        error: {"body": response.body, 'id': id},
+      );
+      throw response.body;
     }
   }
 
