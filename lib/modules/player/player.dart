@@ -1,9 +1,9 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/player/player.card.dart';
-import 'package:flutter_app/modules/player/player.const.dart';
-import 'package:flutter_app/modules/player/player.list.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/card.dart';
+import 'package:flutter_app/modules/player/const.dart';
+import 'package:flutter_app/modules/player/list.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:provider/provider.dart';
 
 class PlayerView extends StatelessWidget {
@@ -103,7 +103,7 @@ class PlayButton extends StatelessWidget {
             Icons.play_circle_filled,
           ),
           onPressed: () {
-            player.play(null);
+            player.play();
           },
         );
       },
@@ -208,7 +208,7 @@ class ModeButton extends StatelessWidget {
           color: primaryColor,
           iconSize: size,
           onPressed: () {
-            player.togglePlayerMode(null);
+            player.togglePlayerMode();
             BotToast.showText(text: "${player.playerMode.name}模式");
             // Fluttertoast.showToast(
             //   msg: "${player.playerMode.name}模式",

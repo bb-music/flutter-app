@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/components/text_tags/tags.dart';
 import 'package:flutter_app/modules/music_order/detail.dart';
 import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/origin_sdk/service.dart';
 import 'package:provider/provider.dart';
@@ -142,7 +142,7 @@ class _SearchViewState extends State<SearchView> {
                   );
                 } else {
                   player.play(
-                    MusicItem(
+                    music: MusicItem(
                       id: detail.id,
                       cover: detail.cover,
                       name: detail.name,

@@ -1,9 +1,8 @@
-import 'package:bot_toast/bot_toast.dart'
-    show BotToastInit, BotToast, BotToastNavigatorObserver;
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/home/home.dart';
 import 'package:flutter_app/modules/music_order/model.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:provider/provider.dart';
 
 // toast 初始化

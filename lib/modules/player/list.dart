@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/components/sheet/bottom_sheet.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
@@ -97,7 +97,7 @@ class PlayerList extends StatelessWidget {
                             ),
                             onTap: () {
                               Provider.of<PlayerModel>(context, listen: false)
-                                  .play(item);
+                                  .play(music: item);
                             },
                             onLongPress: () {
                               showItemSheet(context, item);
@@ -129,7 +129,7 @@ void showItemSheet(BuildContext context, MusicItem data) {
     SheetItem(
         title: const Text('播放'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false).play(data);
+          Provider.of<PlayerModel>(context, listen: false).play(music: data);
           Navigator.of(context).pop();
         }),
     SheetItem(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:flutter_app/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 

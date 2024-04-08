@@ -4,7 +4,7 @@ import 'package:flutter_app/components/text_tags/tags.dart';
 import 'package:flutter_app/modules/music_order/list.dart';
 import 'package:flutter_app/modules/music_order/model.dart';
 import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/player.model.dart';
+import 'package:flutter_app/modules/player/model.dart';
 import 'package:flutter_app/modules/user_music_order/common.dart';
 import 'package:flutter_app/origin_sdk/origin_types.dart';
 import 'package:flutter_app/utils/clear_html_tags.dart';
@@ -44,7 +44,7 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
       SheetItem(
         title: const Text('播放'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false).play(item);
+          Provider.of<PlayerModel>(context, listen: false).play(music: item);
         },
       ),
       SheetItem(
@@ -97,7 +97,7 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
                   onPressed: () {
                     player.clearPlayerList();
                     player.addPlayerList(musicOrder.musicList);
-                    player.play(musicOrder.musicList[0]);
+                    player.play(music: musicOrder.musicList[0]);
                   },
                 ),
                 SheetItem(
@@ -133,7 +133,8 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
               title: Text(item.name),
               subtitle: TextTags(tags: tags),
               onTap: () {
-                Provider.of<PlayerModel>(context, listen: false).play(item);
+                Provider.of<PlayerModel>(context, listen: false)
+                    .play(music: item);
               },
               trailing: InkWell(
                 borderRadius: BorderRadius.circular(4.0),
