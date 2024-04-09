@@ -56,7 +56,15 @@ class PlayerModel extends ChangeNotifier {
       notifyListeners();
     });
 
-    audio.positionStream.listen((position) {});
+    // 记住播放进度
+    var t = DateTime.now();
+    audio.positionStream.listen((event) {
+      var n = DateTime.now();
+      if (t.add(const Duration(seconds: 5)).isBefore(n)) {
+        _cachePosition();
+        t = n;
+      }
+    });
     // 后台服务
     _audioPlayerHandler = AudioPlayerHandler(player: this);
     _audioService = await AudioService.init(
@@ -297,7 +305,7 @@ class PlayerModel extends ChangeNotifier {
   }
 
   // 缓存播放进度
-  Future<void> _cachePositioin() async {
+  Future<void> _cachePosition() async {
     final localStorage = await SharedPreferences.getInstance();
     localStorage.setInt(
       _storageKeyPosition,
@@ -347,6 +355,11 @@ class PlayerModel extends ChangeNotifier {
       );
       service.getMusicUrl(current!.id).then((musicUrl) {
         audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+        // 设置播放进度
+        final pos = localStorage.getInt(_storageKeyPosition) ?? 0;
+        if (pos > 0) {
+          audio.seek(Duration(milliseconds: pos));
+        }
       });
     }
 
@@ -397,6 +410,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       print('playbackEventStream');
       print(event);
       _audioEvent = event;
+      _updatePosition();
       _broadcastState();
     });
 
@@ -415,6 +429,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     print(player.current!.name);
     mediaItem.add(music2mediaItem(player.current!));
     await player.audio.play();
+    _updatePosition();
     _broadcastState();
   }
 
@@ -422,6 +437,7 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   Future<void> pause() async {
     print('暂停');
     await player.audio.pause();
+    _updatePosition();
     _broadcastState();
   }
 
@@ -439,12 +455,21 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   Future<void> skipToPrevious() async {
     print('上一首');
     await player.prev();
+    _broadcastState();
   }
 
   @override
   Future<void> skipToNext() async {
     print('下一首');
     await player.next();
+    _broadcastState();
+  }
+
+  void _updatePosition() {
+    _audioEvent = _audioEvent.copyWith(
+      updatePosition: player.audio.position,
+      updateTime: DateTime.now(),
+    );
   }
 
   void _broadcastState() {
