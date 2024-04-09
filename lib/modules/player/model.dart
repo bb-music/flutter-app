@@ -14,6 +14,7 @@ const _storageKeyCurrent = 'player_current';
 const _storageKeyPlayerList = 'player_player_list';
 const _storageKeyHistoryList = 'player_history_list';
 const _storageKeyPlayerMode = 'player_player_mode';
+const _storageKeyPosition = 'player_position';
 
 class PlayerModel extends ChangeNotifier {
   // 计时器
@@ -27,42 +28,36 @@ class PlayerModel extends ChangeNotifier {
   MusicItem? current;
   // 歌曲是否加载
   bool isLoading = false;
+  // 是否正在播放
+  bool get isPlaying {
+    return audio.playing;
+  }
+
   // 播放列表
   final List<MusicItem> playerList = [];
   // 已播放，用于计算随机
   final List<String> _playerHistory = [];
-  // 播放器状态
-  PlayerStatus playerStatus = PlayerStatus.stop;
   // 播放模式
   PlayerMode playerMode = PlayerMode.listLoop;
 
   init() async {
     await _initLocalStorage();
+    // 监听播放状态
     audio.playerStateStream.listen((state) {
-      // print("====== START =======");
-      // print(state);
-      // print("====== END ========");
-      if (state.playing) {
-        _setStatus(PlayerStatus.play);
-      } else {
-        _setStatus(PlayerStatus.pause);
-      }
-      // var Function closeLoading = () {};
       if (state.processingState == ProcessingState.loading) {
-        // closeLoading = BotToast.showLoading();
         isLoading = true;
-        notifyListeners();
       }
       if (state.processingState == ProcessingState.ready) {
-        // closeLoading();
         isLoading = false;
-        notifyListeners();
       }
       if (state.processingState == ProcessingState.completed) {
         endNext();
       }
+      notifyListeners();
     });
-    // audio.positionStream.listen((event) { })
+
+    audio.positionStream.listen((position) {});
+    // 后台服务
     _audioPlayerHandler = AudioPlayerHandler(player: this);
     _audioService = await AudioService.init(
       builder: () => _audioPlayerHandler!,
@@ -72,8 +67,7 @@ class PlayerModel extends ChangeNotifier {
         androidNotificationOngoing: true,
       ),
     );
-    await _updateAudioServiceQueue();
-    // _audioService!.customAction('');
+    _audioService!.setRepeatMode(AudioServiceRepeatMode.one);
   }
 
   // 播放
@@ -117,7 +111,7 @@ class PlayerModel extends ChangeNotifier {
         _addPlayerHistory();
       } else {
         // 和 current 相等
-        if (playerStatus == PlayerStatus.play) {
+        if (isPlaying) {
           // 播放中暂停
           await audio.pause();
         } else {
@@ -128,7 +122,7 @@ class PlayerModel extends ChangeNotifier {
       }
     } else {
       if (current != null) {
-        if (playerStatus == PlayerStatus.play) {
+        if (isPlaying) {
           // 播放中暂停
           await audio.pause();
         } else {
@@ -268,7 +262,6 @@ class PlayerModel extends ChangeNotifier {
   void addPlayerList(List<MusicItem> musics) {
     removePlayerList(musics);
     playerList.addAll(musics);
-    _updateAudioServiceQueue();
     _updateLocalStorage();
     notifyListeners();
   }
@@ -276,7 +269,6 @@ class PlayerModel extends ChangeNotifier {
   // 在播放列表中移除
   void removePlayerList(List<MusicItem> musics) {
     playerList.removeWhere((w) => musics.where((e) => e.id == w.id).isNotEmpty);
-    _updateAudioServiceQueue();
     _updateLocalStorage();
     notifyListeners();
   }
@@ -284,7 +276,6 @@ class PlayerModel extends ChangeNotifier {
   // 清空播放列表
   void clearPlayerList() {
     playerList.clear();
-    _updateAudioServiceQueue();
     _updateLocalStorage();
     notifyListeners();
   }
@@ -305,40 +296,20 @@ class PlayerModel extends ChangeNotifier {
     await _audioService!.play();
   }
 
-  _setStatus(PlayerStatus status) {
-    if (playerStatus == status) return;
-    playerStatus = status;
-    notifyListeners();
-  }
-
-  // 更新 audio_service 队列
-  Future<void> _updateAudioServiceQueue() async {
-    print('_updateAudioServiceQueue');
-    if (_audioService != null) {
-      // print(_audioService);
-      // await _audioService!.addQueueItems(
-      //   playerList.map((music) => music2mediaItem(music)).toList(),
-      // );
-      // print('_audioService!.queue');
-      // print(_audioService);
-    }
-  }
-
-  // 更新 audio_service 显示的歌曲
-  _updateAudioServiceItem(MusicItem current) {
-    if (_audioPlayerHandler != null) {
-      print('更新 audio_service 显示的歌曲');
-      _audioPlayerHandler!.mediaItem.add(music2mediaItem(current));
-      print(_audioService!.mediaItem);
-    }
+  // 缓存播放进度
+  Future<void> _cachePositioin() async {
+    final localStorage = await SharedPreferences.getInstance();
+    localStorage.setInt(
+      _storageKeyPosition,
+      audio.position.inMilliseconds,
+    );
   }
 
   // 更新缓存
-  _updateLocalStorage() {
+  void _updateLocalStorage() {
     _timer?.cancel();
     _timer = Timer(const Duration(microseconds: 500), () async {
       final localStorage = await SharedPreferences.getInstance();
-      // json 编码
       localStorage.setString(
         _storageKeyCurrent,
         current != null ? jsonEncode(current) : "",
@@ -359,7 +330,7 @@ class PlayerModel extends ChangeNotifier {
   }
 
   // 读取缓存
-  _initLocalStorage() async {
+  Future<void> _initLocalStorage() async {
     final localStorage = await SharedPreferences.getInstance();
 
     // 当前歌曲
@@ -419,9 +390,24 @@ class PlayerModel extends ChangeNotifier {
 
 class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
   final PlayerModel player;
+  late PlaybackEvent _audioEvent;
+
   AudioPlayerHandler({required this.player}) {
-    player.audio.playbackEventStream.map(_transformEvent).pipe(playbackState);
-    mediaItem.add(music2mediaItem(player.current!));
+    player.audio.playbackEventStream.listen((event) {
+      print('playbackEventStream');
+      print(event);
+      _audioEvent = event;
+      _broadcastState();
+    });
+
+    if (player.current != null) {
+      mediaItem.add(music2mediaItem(player.current!));
+    }
+    // player.audio.positionStream.listen((position) {
+    //   print('position');
+    //   print(position);
+    //   _broadcastState();
+    // });
   }
   @override
   Future<void> play() async {
@@ -429,49 +415,47 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
     print(player.current!.name);
     mediaItem.add(music2mediaItem(player.current!));
     await player.audio.play();
+    _broadcastState();
   }
 
   @override
   Future<void> pause() async {
     print('暂停');
     await player.audio.pause();
+    _broadcastState();
   }
 
   @override
   Future<void> stop() async {
     print('停止');
     await player.audio.stop();
+    _broadcastState();
   }
 
   @override
   Future<void> seek(Duration position) => player.audio.seek(position);
 
-  Future<void> skipToQueueItem(int i) async {
-    print('skipToQueueItem');
-    print(i);
-  }
-
   @override
-  Future<void> skipToPrevious() {
+  Future<void> skipToPrevious() async {
     print('上一首');
-    return player.prev();
+    await player.prev();
   }
 
   @override
-  Future<void> skipToNext() {
+  Future<void> skipToNext() async {
     print('下一首');
-    return player.next();
+    await player.next();
   }
 
-  PlaybackState _transformEvent(PlaybackEvent event) {
+  void _broadcastState() {
     // print('_transformEvent');
     // print(event);
-    return PlaybackState(
+    playbackState.add(playbackState.value.copyWith(
       controls: [
         MediaControl.rewind,
+        MediaControl.skipToPrevious,
         if (player.audio.playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
-        MediaControl.fastForward,
+        MediaControl.skipToNext,
       ],
       systemActions: const {
         MediaAction.seek,
@@ -490,8 +474,8 @@ class AudioPlayerHandler extends BaseAudioHandler with SeekHandler {
       updatePosition: player.audio.position,
       bufferedPosition: player.audio.bufferedPosition,
       speed: player.audio.speed,
-      queueIndex: event.currentIndex,
-    );
+      queueIndex: _audioEvent.currentIndex,
+    ));
   }
 }
 

@@ -11,26 +11,30 @@ class PlayerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      height: 70,
-      width: MediaQuery.of(context).size.width - 30,
-      padding: const EdgeInsets.only(left: 15, right: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Theme.of(context).secondaryHeaderColor,
-        border: Border.all(color: primaryColor, width: .5),
-      ),
-      child: const Flex(
-        direction: Axis.horizontal,
-        children: [
-          PlayInfo(),
-          Row(children: [
-            PlayButton(),
-            NextButton(),
-            PlayerListButton(),
-          ]),
-        ],
+    return GestureDetector(
+      onTap: () {
+        showPlayerCard(context);
+      },
+      child: Container(
+        height: 70,
+        width: MediaQuery.of(context).size.width - 30,
+        padding: const EdgeInsets.only(left: 15, right: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Theme.of(context).secondaryHeaderColor,
+          border: Border.all(color: primaryColor, width: .5),
+        ),
+        child: const Flex(
+          direction: Axis.horizontal,
+          children: [
+            PlayInfo(),
+            Row(children: [
+              PlayButton(),
+              NextButton(),
+              PlayerListButton(),
+            ]),
+          ],
+        ),
       ),
     );
   }
@@ -47,23 +51,11 @@ class PlayInfo extends StatelessWidget {
 
         return Expanded(
           flex: 1,
-          child: GestureDetector(
-            onTap: () {
-              showPlayerCard(context);
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // Text(duration)
-              ],
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 16,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         );
@@ -84,7 +76,7 @@ class PlayButton extends StatelessWidget {
 
     return Consumer<PlayerModel>(
       builder: (context, player, child) {
-        if (player.playerStatus == PlayerStatus.play) {
+        if (player.isPlaying) {
           return IconButton(
             color: primaryColor,
             iconSize: size,
