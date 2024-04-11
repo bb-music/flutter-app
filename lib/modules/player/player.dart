@@ -1,7 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/card.dart';
-import 'package:flutter_app/modules/player/const.dart';
 import 'package:flutter_app/modules/player/list.dart';
 import 'package:flutter_app/modules/player/model.dart';
 import 'package:provider/provider.dart';

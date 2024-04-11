@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/player/player.dart';
 import 'package:flutter_app/modules/player/model.dart';
@@ -97,16 +99,17 @@ class PlayerProgress extends StatefulWidget {
 class _PlayerProgressState extends State<PlayerProgress> {
   double _value = 0;
   bool _isChanged = false;
+  List<StreamSubscription<Duration>?> listens = [];
 
   @override
   void initState() {
     final player = Provider.of<PlayerModel>(context, listen: false);
     super.initState();
 
-    player.audio.positionStream.listen((event) {
+    listens.add(player.listenPosition((event) {
       if (_isChanged || !mounted) return;
       double c = event.inSeconds.toDouble();
-      double total = player.audio.duration?.inSeconds.toDouble() ?? 0.0;
+      double total = player.duration?.inSeconds.toDouble() ?? 0.0;
       double v = c / total;
       if (v.isNaN) return;
       if (v > 1.0) {
@@ -118,18 +121,21 @@ class _PlayerProgressState extends State<PlayerProgress> {
       setState(() {
         _value = v;
       });
-    });
+    }));
   }
 
   @override
   void dispose() {
+    for (final listen in listens) {
+      listen?.cancel();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<PlayerModel>(builder: (context, player, child) {
-      int total = (player.audio.duration?.inSeconds ?? 0);
+      int total = (player.duration?.inSeconds ?? 0);
       return Column(
         children: [
           Slider(
@@ -147,7 +153,7 @@ class _PlayerProgressState extends State<PlayerProgress> {
             onChangeEnd: (value) {
               final player = Provider.of<PlayerModel>(context, listen: false);
               int v = (value * total).toInt();
-              player.audio.seek(Duration(seconds: v));
+              player.seek(Duration(seconds: v));
               setState(() {
                 _isChanged = false;
               });

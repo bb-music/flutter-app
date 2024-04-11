@@ -1,8 +1,10 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/modules/home/home.dart';
 import 'package:flutter_app/modules/music_order/model.dart';
 import 'package:flutter_app/modules/player/model.dart';
+import 'package:flutter_app/modules/player/service.dart';
 import 'package:provider/provider.dart';
 
 // toast 初始化
@@ -20,7 +22,17 @@ ThemeData theme = ThemeData(
   primaryColor: primaryColor,
 );
 
-void main() {
+final _playerHandler = AudioPlayerHandler();
+
+void main() async {
+  final playerService = await AudioService.init(
+    builder: () => _playerHandler,
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.bbmusic.channel.audio',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationOngoing: true,
+    ),
+  );
   runApp(
     MultiProvider(
       providers: [
@@ -34,7 +46,10 @@ void main() {
         navigatorObservers: [BotToastNavigatorObserver()],
         builder: (context, child) {
           // 初始化播放器
-          Provider.of<PlayerModel>(context, listen: false).init();
+          Provider.of<PlayerModel>(context, listen: false).init(
+            playerHandler: _playerHandler,
+            playerService: playerService,
+          );
           // 初始化歌单
           Provider.of<UserMusicOrderModel>(context, listen: false).init();
 
