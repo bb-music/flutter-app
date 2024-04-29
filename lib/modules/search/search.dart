@@ -1,11 +1,11 @@
 // import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/components/text_tags/tags.dart';
-import 'package:flutter_app/modules/music_order/detail.dart';
-import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/model.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
-import 'package:flutter_app/origin_sdk/service.dart';
+import 'package:bbmusic/components/text_tags/tags.dart';
+import 'package:bbmusic/modules/music_order/detail.dart';
+import 'package:bbmusic/modules/player/player.dart';
+import 'package:bbmusic/modules/player/model.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
+import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:provider/provider.dart';
 
 class SearchView extends StatefulWidget {

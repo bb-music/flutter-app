@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/user_music_order/user_music_order.dart';
+import 'package:bbmusic/modules/user_music_order/user_music_order.dart';
 
 class SettingView extends StatelessWidget {
   const SettingView({super.key});

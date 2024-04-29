@@ -1,3 +1,3 @@
-import 'package:flutter_app/origin_sdk/bili/client.dart';
+import 'package:bbmusic/origin_sdk/bili/client.dart';
 
 var service = BiliClient();

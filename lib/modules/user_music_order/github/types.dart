@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
 
 class GithubFile {
   String name;

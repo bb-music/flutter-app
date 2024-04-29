@@ -1,7 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/music_order/model.dart';
-import 'package:flutter_app/modules/user_music_order/github/constants.dart';
+import 'package:bbmusic/modules/music_order/model.dart';
+import 'package:bbmusic/modules/user_music_order/github/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

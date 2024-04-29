@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
 
 abstract class UserMusicOrderOrigin {
   String get name => '';

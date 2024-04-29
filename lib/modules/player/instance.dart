@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter_app/modules/player/const.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
-import 'package:flutter_app/origin_sdk/service.dart';
+import 'package:bbmusic/modules/player/const.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
+import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,6 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter_app/origin_sdk/bili/utils.dart';
-import 'package:flutter_app/utils/logs.dart';
+import 'package:bbmusic/origin_sdk/bili/utils.dart';
+import 'package:bbmusic/utils/logs.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';

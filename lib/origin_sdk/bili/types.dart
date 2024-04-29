@@ -1,6 +1,6 @@
-import 'package:flutter_app/origin_sdk/bili/utils.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
-import 'package:flutter_app/utils/clear_html_tags.dart';
+import 'package:bbmusic/origin_sdk/bili/utils.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
+import 'package:bbmusic/utils/clear_html_tags.dart';
 
 /// 签名秘钥
 class SignData {

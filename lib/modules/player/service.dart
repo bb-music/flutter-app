@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter_app/modules/player/instance.dart';
+import 'package:bbmusic/modules/player/instance.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
 
 class AudioPlayerHandler extends BaseAudioHandler {
   final BBPlayer player = BBPlayer();

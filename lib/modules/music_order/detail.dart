@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_app/components/sheet/bottom_sheet.dart';
-import 'package:flutter_app/components/text_tags/tags.dart';
-import 'package:flutter_app/modules/music_order/list.dart';
-import 'package:flutter_app/modules/music_order/model.dart';
-import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/model.dart';
-import 'package:flutter_app/modules/user_music_order/common.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
-import 'package:flutter_app/utils/clear_html_tags.dart';
+import 'package:bbmusic/components/sheet/bottom_sheet.dart';
+import 'package:bbmusic/components/text_tags/tags.dart';
+import 'package:bbmusic/modules/music_order/list.dart';
+import 'package:bbmusic/modules/music_order/model.dart';
+import 'package:bbmusic/modules/player/player.dart';
+import 'package:bbmusic/modules/player/model.dart';
+import 'package:bbmusic/modules/user_music_order/common.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
+import 'package:bbmusic/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 
 class MusicOrderDetail extends StatefulWidget {

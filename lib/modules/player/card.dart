@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/player/player.dart';
-import 'package:flutter_app/modules/player/model.dart';
-import 'package:flutter_app/utils/clear_html_tags.dart';
+import 'package:bbmusic/modules/player/player.dart';
+import 'package:bbmusic/modules/player/model.dart';
+import 'package:bbmusic/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 
 class PlayerCard extends StatelessWidget {

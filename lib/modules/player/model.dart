@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter_app/modules/player/service.dart';
+import 'package:bbmusic/modules/player/service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app/modules/player/const.dart';
-import 'package:flutter_app/origin_sdk/origin_types.dart';
+import 'package:bbmusic/modules/player/const.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
 
 class PlayerModel extends ChangeNotifier {
   // 播放器实例
