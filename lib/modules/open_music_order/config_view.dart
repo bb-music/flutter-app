@@ -14,7 +14,7 @@ class OpenMusicOrderConfigView extends StatefulWidget {
 }
 
 class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
-  List<String> list = [];
+  List<String> _list = [];
   TextEditingController _controller = TextEditingController();
 
   @override
@@ -24,18 +24,15 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
   }
 
   _init() async {
-    final localStorage = await SharedPreferences.getInstance();
+    final list = await getMusicOrderOriginUrls();
     setState(() {
-      list = localStorage.getStringList(_cacheKey) ??
-          [
-            "https://lvyueyang.github.io/bb-music-order-open/list.json",
-          ];
+      _list = list;
     });
   }
 
   _saveHandler() async {
     final localStorage = await SharedPreferences.getInstance();
-    localStorage.setStringList(_cacheKey, list);
+    localStorage.setStringList(_cacheKey, _list);
     BotToast.showText(text: '保存成功');
   }
 
@@ -46,11 +43,19 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
         title: const Text("歌单源配置"),
       ),
       body: ListView(
-        children: list
+        children: _list
             .map(
               (e) => ListTile(
                 title: Text(e),
-                trailing: const Icon(Icons.delete_outline),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () {
+                    setState(() {
+                      _list.remove(e);
+                      _saveHandler();
+                    });
+                  },
+                ),
               ),
             )
             .toList(),
@@ -73,7 +78,11 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
                       bottom: MediaQuery.of(context).viewInsets.bottom + 15,
                     ),
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _list.add(_controller.text);
+                        Navigator.of(context).pop();
+                        _saveHandler();
+                      },
                       child: const Text('添加'),
                     ),
                   ),
@@ -100,4 +109,12 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
       ),
     );
   }
+}
+
+Future<List<String>> getMusicOrderOriginUrls() async {
+  final localStorage = await SharedPreferences.getInstance();
+  return localStorage.getStringList(_cacheKey) ??
+      [
+        "https://lvyueyang.github.io/bb-music-order-open/list.json",
+      ];
 }

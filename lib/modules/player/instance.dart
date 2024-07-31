@@ -321,7 +321,6 @@ class BBPlayer {
   // 读取缓存
   Future<void> _initLocalStorage() async {
     final localStorage = await SharedPreferences.getInstance();
-
     // 当前歌曲
     String? c = localStorage.getString(_storageKeyCurrent);
     if (c != null && c.isNotEmpty) {

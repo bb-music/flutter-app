@@ -1,3 +1,4 @@
+import 'package:bbmusic/modules/open_music_order/list_view.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
@@ -41,7 +42,7 @@ class HomeView extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (BuildContext context) {
-                      return const OpenMusicOrderConfigView();
+                      return const OpenMusicOrderListView();
                     },
                   ),
                 );

@@ -149,7 +149,7 @@ class MusicOrderItem {
       id: json["id"],
       name: json["name"],
       desc: json["desc"],
-      author: json["author"],
+      author: json["author"] ?? "",
       musicList: musicList,
       cover: json["cover"],
       createdAt: json["createdAt"],
