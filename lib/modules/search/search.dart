@@ -1,4 +1,6 @@
 // import 'dart:async';
+import 'package:bbmusic/components/sheet/bottom_sheet.dart';
+import 'package:bbmusic/modules/music_order/list.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/text_tags/tags.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
@@ -48,6 +50,46 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
+  // 单个歌曲点击
+  void _onMusicClickHandler(SearchItem detail) {
+    final music = MusicItem(
+      id: detail.id,
+      cover: detail.cover,
+      name: detail.name,
+      duration: detail.duration,
+      author: detail.author,
+      origin: detail.origin,
+    );
+    openBottomSheet(context, [
+      SheetItem(
+        title: Text(
+          music.name,
+          style: TextStyle(
+            color: Theme.of(context).hintColor,
+            fontWeight: FontWeight.bold,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+      SheetItem(
+        title: const Text('播放'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false).play(music: music);
+        },
+      ),
+      SheetItem(
+        title: const Text('下载'),
+        onPressed: () {},
+      ),
+      SheetItem(
+        title: const Text('添加到歌单'),
+        onPressed: () {
+          collectToMusicOrder(context, [music]);
+        },
+      ),
+    ]);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +112,6 @@ class _SearchViewState extends State<SearchView> {
   @override
   Widget build(BuildContext context) {
     var navigator = Navigator.of(context);
-    var player = Provider.of<PlayerModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -141,16 +182,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                   );
                 } else {
-                  player.play(
-                    music: MusicItem(
-                      id: detail.id,
-                      cover: detail.cover,
-                      name: detail.name,
-                      duration: detail.duration,
-                      author: detail.author,
-                      origin: detail.origin,
-                    ),
-                  );
+                  _onMusicClickHandler(detail);
                 }
               },
             );
@@ -172,6 +204,7 @@ class _SearchForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var navigator = Navigator.of(context);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
@@ -179,49 +212,30 @@ class _SearchForm extends StatelessWidget {
           color: Colors.grey,
         ),
       ),
-      child: TextField(
-        controller: keywordController,
-        onSubmitted: (value) => onSearch(),
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          hintText: "请输入歌曲/歌单名",
-          contentPadding: EdgeInsets.symmetric(horizontal: 25),
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: keywordController,
+              onSubmitted: (value) => onSearch(),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: "请输入歌曲/歌单名",
+                contentPadding: EdgeInsets.only(left: 25, right: 10),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(right: 10),
+            child: FilledButton(
+              child: const Text('取消'),
+              onPressed: () {
+                navigator.pop();
+              },
+            ),
+          )
+        ],
       ),
-
-      // child: Stack(
-      //   children: [
-      //     Expanded(
-      //       child: Container(
-      //         decoration: BoxDecoration(
-      //           borderRadius: BorderRadius.circular(25),
-      //           border: Border.all(
-      //             color: Colors.grey,
-      //           ),
-      //         ),
-      //         child: TextField(
-      //           controller: keywordController,
-      //           decoration: const InputDecoration(
-      //             border: InputBorder.none,
-      //             hintText: "请输入歌曲/歌单名",
-      //             contentPadding: EdgeInsets.symmetric(horizontal: 25),
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //     Positioned(
-      //       right: 7,
-      //       bottom: 5,
-      //       child: SizedBox(
-      //         height: 40,
-      //         child: FilledButton(
-      //           onPressed: onSearch,
-      //           child: const Text("搜 索"),
-      //         ),
-      //       ),
-      //     )
-      //   ],
-      // ),
     );
   }
 }

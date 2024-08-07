@@ -1,9 +1,5 @@
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-const _cacheKey = 'open_music_order_list';
 
 class OpenMusicOrderConfigView extends StatefulWidget {
   const OpenMusicOrderConfigView({super.key});
@@ -15,7 +11,7 @@ class OpenMusicOrderConfigView extends StatefulWidget {
 
 class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
   List<String> _list = [];
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
@@ -24,16 +20,14 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
   }
 
   _init() async {
-    final list = await getMusicOrderOriginUrls();
+    final list = await getMusicOrderUrl();
     setState(() {
       _list = list;
     });
   }
 
   _saveHandler() async {
-    final localStorage = await SharedPreferences.getInstance();
-    localStorage.setStringList(_cacheKey, _list);
-    BotToast.showText(text: '保存成功');
+    setMusicOrderUrl(_list);
   }
 
   @override
@@ -109,12 +103,4 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
       ),
     );
   }
-}
-
-Future<List<String>> getMusicOrderOriginUrls() async {
-  final localStorage = await SharedPreferences.getInstance();
-  return localStorage.getStringList(_cacheKey) ??
-      [
-        "https://lvyueyang.github.io/bb-music-order-open/list.json",
-      ];
 }
