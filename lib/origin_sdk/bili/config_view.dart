@@ -11,10 +11,10 @@ class BiliConfigView extends StatefulWidget {
 }
 
 class _BiliConfigViewState extends State<BiliConfigView> {
-  final TextEditingController _signImgKeyController = TextEditingController();
-  final TextEditingController _signSubKeyController = TextEditingController();
-  final TextEditingController _spiB3Controller = TextEditingController();
-  final TextEditingController _spiB4Controller = TextEditingController();
+  // final TextEditingController _signImgKeyController = TextEditingController();
+  // final TextEditingController _signSubKeyController = TextEditingController();
+  // final TextEditingController _spiB3Controller = TextEditingController();
+  // final TextEditingController _spiB4Controller = TextEditingController();
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _BiliConfigViewState extends State<BiliConfigView> {
           right: 20,
           top: 10,
         ),
-        child: Column(
+        child: const Column(
           children: [],
         ),
       ),

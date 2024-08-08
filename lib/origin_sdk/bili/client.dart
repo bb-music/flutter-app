@@ -89,6 +89,7 @@ class BiliClient implements OriginService {
     }
   }
 
+  // 搜索
   @override
   Future<SearchResponse> search(SearchParams params) async {
     await init();
@@ -114,6 +115,7 @@ class BiliClient implements OriginService {
     }
   }
 
+  // 搜索条目详情
   @override
   Future<SearchItem> searchDetail(String id) async {
     BiliId biliid = BiliId.unicode(id);
@@ -139,6 +141,7 @@ class BiliClient implements OriginService {
     }
   }
 
+  // 获取音乐播放地址
   @override
   Future<MusicUrl> getMusicUrl(String id) async {
     BiliId biliid = BiliId.unicode(id);
