@@ -368,6 +368,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.12.0"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      sha256: "2e123074287cc9fd6c09de8336dae606d1ddb88d9ac47358826db698c176a1f2"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.5"
   nested:
     dependency: transitive
     description:
@@ -385,7 +393,7 @@ packages:
     source: hosted
     version: "2.1.0"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: "087ce49c3f0dc39180befefc60fdb4acd8f8620e5682fe2476afd0b3688bb4af"
@@ -528,6 +536,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.27.7"
+  saver_gallery:
+    dependency: "direct main"
+    description:
+      name: saver_gallery
+      sha256: fbd52d7b3095f6463faef3372a2d9c02e7a95af2b1cc7493494f19174b422b2b
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.5"
   shared_preferences:
     dependency: "direct main"
     description:
