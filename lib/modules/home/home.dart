@@ -1,8 +1,6 @@
 import 'package:bbmusic/modules/open_music_order/list_view.dart';
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
-import 'package:bbmusic/modules/open_music_order/config_view.dart';
 import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/search/search.dart';
 import 'package:bbmusic/modules/setting/setting.dart';

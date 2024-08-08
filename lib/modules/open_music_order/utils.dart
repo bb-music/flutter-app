@@ -1,15 +1,16 @@
+import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const cacheKey = 'open_music_order_list';
+final cacheKey = CacheKey.openMusicOrderUrls;
+
 const defaultUrls = [
   'https://lvyueyang.github.io/bb-music-order-open/list.json'
 ];
 
 Future<List<String>> getMusicOrderUrl() async {
   final localStorage = await SharedPreferences.getInstance();
-  final List<String> urls = localStorage.getStringList(cacheKey) ??
-      ["https://lvyueyang.github.io/bb-music-order-open/list.json"];
+  final List<String> urls = localStorage.getStringList(cacheKey) ?? defaultUrls;
   return urls;
 }
 

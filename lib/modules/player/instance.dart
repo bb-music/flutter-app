@@ -2,17 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/player/const.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _storageKeyCurrent = 'player_current';
-const _storageKeyPlayerList = 'player_player_list';
-const _storageKeyHistoryList = 'player_history_list';
-const _storageKeyPlayerMode = 'player_player_mode';
-const _storageKeyPosition = 'player_position';
+final _storageKeyCurrent = CacheKey.playerCurrent;
+final _storageKeyPlayerList = CacheKey.playerList;
+final _storageKeyHistoryList = CacheKey.playerHistoryList;
+final _storageKeyPlayerMode = CacheKey.playerMode;
+final _storageKeyPosition = CacheKey.playerPosition;
 
 class BBPlayer {
   // 计时器
