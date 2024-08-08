@@ -1,12 +1,13 @@
-import 'dart:convert';
-
 import 'package:bbmusic/modules/music_order/detail.dart';
 import 'package:bbmusic/modules/open_music_order/config_view.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
+final dio = Dio();
 
 class OpenMusicOrderListView extends StatefulWidget {
   const OpenMusicOrderListView({super.key});
@@ -33,9 +34,9 @@ class _OpenMusicOrderListViewState extends State<OpenMusicOrderListView> {
 
   Future<void> getOrder(String url) async {
     try {
-      final res = await http.get(Uri.parse(url));
+      final res = await dio.get(url);
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = res.data;
         final List<MusicOrderItem> l = [];
         data.forEach((item) {
           l.add(MusicOrderItem.fromJson(item));
@@ -57,14 +58,15 @@ class _OpenMusicOrderListViewState extends State<OpenMusicOrderListView> {
         title: const Text("歌单广场"),
         actions: [
           IconButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) {
-                    return const OpenMusicOrderConfigView();
-                  },
-                ));
-              },
-              icon: const Icon(Icons.settings))
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (BuildContext context) {
+                  return const OpenMusicOrderConfigView();
+                },
+              ));
+            },
+            icon: const Icon(Icons.settings),
+          ),
         ],
       ),
       body: ListView(
@@ -81,8 +83,8 @@ class _OpenMusicOrderListViewState extends State<OpenMusicOrderListView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: item.cover != null && item.cover!.isNotEmpty
-                          ? Image.network(
-                              item.cover!,
+                          ? CachedNetworkImage(
+                              imageUrl: item.cover!,
                               width: double.infinity,
                               height: double.infinity,
                               fit: BoxFit.cover,

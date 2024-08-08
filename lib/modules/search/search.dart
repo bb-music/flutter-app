@@ -1,6 +1,7 @@
 // import 'dart:async';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/text_tags/tags.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
@@ -150,8 +151,8 @@ class _SearchViewState extends State<SearchView> {
             return ListTile(
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(4.0),
-                child: Image.network(
-                  cover,
+                child: CachedNetworkImage(
+                  imageUrl: cover,
                   width: 50,
                   height: 50,
                   fit: BoxFit.cover,

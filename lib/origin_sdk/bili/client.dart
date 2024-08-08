@@ -1,9 +1,8 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bbmusic/origin_sdk/bili/utils.dart';
 import 'package:bbmusic/utils/logs.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../origin_types.dart';
 import './sign.dart';
 import './types.dart';
@@ -18,8 +17,29 @@ const _spiB3 = "bili_spi_b3";
 const _spiB4 = "bili_spi_b4";
 
 class BiliClient implements OriginService {
+  final dio = Dio();
+
   SignData? signData;
   SpiData? spiData;
+
+  BiliClient() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
+          final cookie = "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};";
+          options.headers["UserAgent"] = _userAgent;
+          options.headers["cookie"] = cookie;
+          options.headers["Referer"] = "https://www.bilibili.com/";
+
+          return handler.next(options);
+        },
+        onError: (DioException error, ErrorInterceptorHandler handler) {
+          BotToast.showText(text: '请求失败: $error');
+          return handler.next(error);
+        },
+      ),
+    );
+  }
 
   init() async {
     final localStorage = await SharedPreferences.getInstance();
@@ -44,7 +64,6 @@ class BiliClient implements OriginService {
         }
       }
     }
-
     final results = await Future.wait([getSignData(), getSpiData()]);
 
     signData = results[0] as SignData;
@@ -63,29 +82,28 @@ class BiliClient implements OriginService {
 
   // 获取签名秘钥
   Future<SignData> getSignData() async {
-    final response = await http.get(
-      Uri.parse('https://api.bilibili.com/x/web-interface/nav'),
+    final response = await dio.get(
+      "https://api.bilibili.com/x/web-interface/nav",
     );
 
     if (response.statusCode == 200) {
-      return SignData.fromJson(json.decode(response.body));
+      return SignData.fromJson(response.data);
     } else {
-      logs.e("bili: 获取签名秘钥失败", error: {"body": response.body});
-      throw response.body;
+      logs.e("bili: 获取签名秘钥失败", error: {"body": response.data});
+      throw response.data;
     }
   }
 
   // 获取 spi 唯一标识
   Future<SpiData> getSpiData() async {
-    final response = await http.get(
-      Uri.parse('https://api.bilibili.com/x/frontend/finger/spi'),
-    );
+    final response =
+        await dio.get("https://api.bilibili.com/x/frontend/finger/spi");
 
     if (response.statusCode == 200) {
-      return SpiData.fromJson(json.decode(response.body));
+      return SpiData.fromJson(response.data);
     } else {
-      logs.e("bili: 获取 spi 唯一标识失败", error: {"body": response.body});
-      throw response.body;
+      logs.e("bili: 获取 spi 唯一标识失败", error: {"body": response.data});
+      throw response.data;
     }
   }
 
@@ -100,18 +118,18 @@ class BiliClient implements OriginService {
       'page': params.page.toString(),
       'pagesize': '20',
     });
-    final response = await _request(
-      Uri.parse(url).replace(queryParameters: query),
+    final response = await dio.get(
+      Uri.parse(url).replace(queryParameters: query).toString(),
     );
 
     if (response.statusCode == 200) {
-      return BiliSearchResponse.fromJson(json.decode(response.body));
+      return BiliSearchResponse.fromJson(response.data);
     } else {
       logs.e(
         "bili: 搜索失败",
-        error: {"body": response.body, 'params': params},
+        error: {"body": response.data, 'params': params},
       );
-      throw response.body;
+      throw response.data;
     }
   }
 
@@ -125,19 +143,19 @@ class BiliClient implements OriginService {
       'aid': biliid.aid,
       'bvid': biliid.bvid,
     });
-    final response = await _request(
-      Uri.parse(url).replace(queryParameters: query),
+    final response = await dio.get(
+      Uri.parse(url).replace(queryParameters: query).toString(),
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body)['data'];
+      final data = response.data['data'];
       return BiliSearchItem.fromJson(data);
     } else {
       logs.e(
         "bili: 搜索条目详情获取失败",
-        error: {"body": response.body, 'id': id},
+        error: {"body": response.data, 'id': id},
       );
-      throw response.body;
+      throw response.data;
     }
   }
 
@@ -160,14 +178,13 @@ class BiliClient implements OriginService {
       'bvid': biliid.bvid,
       'cid': biliid.cid!,
     });
-
-    final response = await _request(
-      Uri.parse(url).replace(queryParameters: query),
+    final response = await dio.get(
+      Uri.parse(url).replace(queryParameters: query).toString(),
     );
 
     if (response.statusCode == 200) {
-      final res = json.decode(response.body)['data'];
-      final durl = res['durl'].toList();
+      final data = response.data['data'];
+      final durl = data['durl'].toList();
       String url = '';
       if (durl != null && durl.isNotEmpty) {
         url = durl[0]['url'];
@@ -179,9 +196,9 @@ class BiliClient implements OriginService {
     } else {
       logs.e(
         "bili: 获取音乐播放地址失败",
-        error: {"body": response.body, 'id': id},
+        error: {"body": response.data, 'id': id},
       );
-      throw response.body;
+      throw response.data;
     }
   }
 
@@ -191,22 +208,5 @@ class BiliClient implements OriginService {
       throw Exception('请先获取签名秘钥');
     }
     return encWbi(params, signData!.imgKey, signData!.subKey);
-  }
-
-  /// 请求封装
-  Future<http.Response> _request(Uri uri) async {
-    try {
-      return await http.get(
-        uri,
-        headers: {
-          "UserAgent": _userAgent,
-          "cookie": "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};",
-          "Referer": "https://www.bilibili.com/"
-        },
-      );
-    } catch (e) {
-      BotToast.showText(text: '请求失败: $e');
-      throw Exception('请求失败: $e');
-    }
   }
 }

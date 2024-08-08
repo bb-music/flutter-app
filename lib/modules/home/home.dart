@@ -1,3 +1,4 @@
+import 'package:bbmusic/modules/download/list_view.dart';
 import 'package:bbmusic/modules/open_music_order/list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
@@ -54,6 +55,19 @@ class HomeView extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (BuildContext context) {
                       return const UserMusicOrderView();
+                    },
+                  ),
+                );
+              },
+            ),
+            _ItemCard(
+              icon: Icons.download,
+              title: '下载管理',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return const DownloadListView();
                     },
                   ),
                 );

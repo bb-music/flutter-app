@@ -19,6 +19,7 @@ class SettingView extends StatelessWidget {
             return ListTile(
               title: Text('${e.cname} 歌单源设置'),
               leading: Icon(e.icon),
+              minTileHeight: 60,
               onTap: () {
                 navigator.push(
                   MaterialPageRoute(

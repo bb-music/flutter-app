@@ -1,4 +1,5 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
@@ -252,8 +253,8 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: item.cover != null && item.cover!.isNotEmpty
-                ? Image.network(
-                    item.cover!,
+                ? CachedNetworkImage(
+                    imageUrl: item.cover!,
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,

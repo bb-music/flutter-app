@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:bbmusic/modules/download/model.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/home/home.dart';
@@ -38,6 +39,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => PlayerModel()),
         ChangeNotifierProvider(create: (context) => UserMusicOrderModel()),
+        ChangeNotifierProvider(create: (context) => DownloadModel()),
       ],
       child: MaterialApp(
         title: '哔哔音乐',

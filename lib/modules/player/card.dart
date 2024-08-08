@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:bbmusic/modules/download/model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/player/model.dart';
@@ -43,8 +45,8 @@ class PlayerCard extends StatelessWidget {
               // 封面
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  player.current!.cover,
+                child: CachedNetworkImage(
+                  imageUrl: player.current!.cover,
                   width: coverWidth,
                   height: coverWidth,
                   fit: BoxFit.cover,
@@ -56,7 +58,10 @@ class PlayerCard extends StatelessWidget {
                 children: [
                   IconButton(
                     iconSize: 30,
-                    onPressed: () {},
+                    onPressed: () {
+                      Provider.of<DownloadModel>(context, listen: false)
+                          .download([player.current!]);
+                    },
                     icon: const Icon(Icons.download),
                   ),
                   IconButton(

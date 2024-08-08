@@ -1,3 +1,4 @@
+import 'package:bbmusic/modules/download/model.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/components/text_tags/tags.dart';
@@ -75,7 +76,9 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
       ),
       SheetItem(
         title: const Text('下载'),
-        onPressed: () {},
+        onPressed: () {
+          Provider.of<DownloadModel>(context, listen: false).download([item]);
+        },
       ),
     ]);
   }

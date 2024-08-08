@@ -43,6 +43,10 @@ dependencies:
   uuid: ^4.3.3
   logger: ^2.2.0
   audio_service: ^0.18.13
+  path_provider: ^2.1.4
+  permission_handler: ^11.3.1
+  dio: ^5.5.0+1
+  cached_network_image: ^3.4.0
 
 dev_dependencies:
   flutter_test:
