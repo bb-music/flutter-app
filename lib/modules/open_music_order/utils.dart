@@ -14,7 +14,7 @@ Future<List<String>> getMusicOrderUrl() async {
   return urls;
 }
 
-setMusicOrderUrl(List<String> list) async {
+Future<void> setMusicOrderUrl(List<String> list) async {
   final localStorage = await SharedPreferences.getInstance();
   localStorage.setStringList(cacheKey, list);
   BotToast.showText(text: '保存成功');

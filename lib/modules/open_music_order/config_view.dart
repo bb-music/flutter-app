@@ -1,5 +1,7 @@
+import 'package:bbmusic/modules/open_music_order/model.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class OpenMusicOrderConfigView extends StatefulWidget {
   const OpenMusicOrderConfigView({super.key});
@@ -27,7 +29,8 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
   }
 
   _saveHandler() async {
-    setMusicOrderUrl(_list);
+    await setMusicOrderUrl(_list);
+    Provider.of<OpenMusicOrderModel>(context).reload();
   }
 
   @override
