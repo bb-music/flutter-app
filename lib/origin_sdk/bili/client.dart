@@ -23,14 +23,15 @@ class BiliClient implements OriginService {
   SpiData? spiData;
 
   BiliClient() {
+    dio.options.headers["UserAgent"] = _userAgent;
+    dio.options.headers["Referer"] = "https://www.bilibili.com/";
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          final cookie = "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};";
-          options.headers["UserAgent"] = _userAgent;
-          options.headers["cookie"] = cookie;
-          options.headers["Referer"] = "https://www.bilibili.com/";
-
+          if (spiData?.b4 != null && spiData?.b3 != null) {
+            final cookie = "buvid4=${spiData!.b4}; buvid3=${spiData!.b3};";
+            options.headers["cookie"] = cookie;
+          }
           return handler.next(options);
         },
         onError: (DioException error, ErrorInterceptorHandler handler) {
@@ -82,9 +83,8 @@ class BiliClient implements OriginService {
 
   // 获取签名秘钥
   Future<SignData> getSignData() async {
-    final response = await dio.get(
-      "https://api.bilibili.com/x/web-interface/nav",
-    );
+    final response =
+        await dio.get("https://api.bilibili.com/x/web-interface/nav");
 
     if (response.statusCode == 200) {
       return SignData.fromJson(response.data);
