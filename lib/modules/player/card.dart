@@ -18,7 +18,7 @@ class PlayerCard extends StatelessWidget {
         return Container(
           height: 460,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.background,
+            color: Theme.of(context).cardColor,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),

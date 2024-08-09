@@ -9,7 +9,9 @@ import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
 
 typedef OnItemHandler = void Function(
-    UserMusicOrderOriginItem umo, MusicOrderItem data);
+  UserMusicOrderOriginItem umo,
+  MusicOrderItem data,
+);
 
 class UserMusicOrderView extends StatelessWidget {
   const UserMusicOrderView({super.key});

@@ -304,6 +304,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.4.9"
+  just_audio_windows:
+    dependency: "direct main"
+    description:
+      name: just_audio_windows
+      sha256: "48ab2dec79cf6097550602fe07b1a644f341450e138dc8fdc23e42ce0ed2d928"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.1"
   leak_tracker:
     dependency: transitive
     description:

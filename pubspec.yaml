@@ -49,6 +49,7 @@ dependencies:
   cached_network_image: ^3.4.0
   path: ^1.9.0
   saver_gallery: ^3.0.5
+  just_audio_windows: ^0.2.1
 
 dev_dependencies:
   flutter_test:
