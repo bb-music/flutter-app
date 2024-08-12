@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/player/const.dart';
+import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:just_audio/just_audio.dart';
@@ -51,7 +52,9 @@ class BBPlayer {
       }
       // notifyListeners();
     });
-
+    // audio.bufferedPositionStream.listen((duration) {
+    //   print('缓冲进度：$duration;  总进度：${audio.bufferedPositionStream}');
+    // });
     // 记住播放进度
     var t = DateTime.now();
     audio.positionStream.listen((event) {
@@ -85,7 +88,7 @@ class BBPlayer {
         _updateLocalStorage();
         print("播放新歌曲");
         await audio.seek(Duration.zero);
-        await _play(id: music.id);
+        await _play(music: music);
         _addPlayerHistory();
       } else {
         // 和 current 相等
@@ -116,7 +119,7 @@ class BBPlayer {
           // notifyListeners();
           _updateLocalStorage();
           if (current != null) {
-            await _play(id: current!.id);
+            await _play(music: current);
             _addPlayerHistory();
           }
         }
@@ -278,12 +281,20 @@ class BBPlayer {
     }
   }
 
-  Future<void> _play({String? id}) async {
-    if (id != null) {
-      MusicUrl musicUrl = await service.getMusicUrl(id);
-      await audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+  Future<void> _play({MusicItem? music, bool isPlay = true}) async {
+    if (music != null) {
+      await audio.setAudioSource(BBMusicSource(music));
+      // MusicUrl musicUrl = await service.getMusicUrl(music.id);
+      // await audio.setUrl(
+      //   musicUrl.url,
+      //   headers: musicUrl.headers,
+      // );
     }
-    await audio.play();
+    if (isPlay) {
+      await audio.play();
+    } else {
+      await audio.pause();
+    }
   }
 
   // 缓存播放进度
@@ -334,13 +345,13 @@ class BBPlayer {
         duration: data['duration'],
         origin: OriginType.getByValue(data['origin']),
       );
-      service.getMusicUrl(current!.id).then((musicUrl) {
-        audio.setUrl(musicUrl.url, headers: musicUrl.headers);
+
+      _play(music: current!, isPlay: false).then((res) {
         // 设置播放进度
-        final pos = localStorage.getInt(_storageKeyPosition) ?? 0;
-        if (pos > 0) {
-          audio.seek(Duration(milliseconds: pos));
-        }
+        // final pos = localStorage.getInt(_storageKeyPosition) ?? 0;
+        // if (pos > 0) {
+        //   audio.seek(Duration(milliseconds: pos));
+        // }
       });
     }
 

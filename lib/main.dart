@@ -7,6 +7,7 @@ import 'package:bbmusic/modules/home/home.dart';
 import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/player/service.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:provider/provider.dart';
 
 // toast 初始化
@@ -27,6 +28,13 @@ ThemeData theme = ThemeData(
 final _playerHandler = AudioPlayerHandler();
 
 void main() async {
+  JustAudioMediaKit.ensureInitialized(
+    iOS: false,
+    windows: true,
+    android: true,
+    linux: true,
+    macOS: true,
+  );
   final playerService = await AudioService.init(
     builder: () => _playerHandler,
     config: const AudioServiceConfig(
