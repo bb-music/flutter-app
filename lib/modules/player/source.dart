@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart';
 import 'package:just_audio/just_audio.dart';
+
+final audioCacheManage = CacheManager(Config("bbmusicMediaCache"));
 
 class BBMusicSource extends StreamAudioSource {
   final List<int> _bytes = [];
@@ -22,17 +26,36 @@ class BBMusicSource extends StreamAudioSource {
     );
   }
 
-  static Future<StreamedResponse> getMusicStream(
+  Future<StreamedResponse> getMusicStream(
     MusicItem music,
     Function(List<int> data) callback,
-  ) {
+  ) async {
     final completer = Completer<StreamedResponse>();
+    // 缓存判断
+    final cacheKey = music2cacheKey(music);
+    final cacheFile = await audioCacheManage.getFileFromCache(cacheKey);
+    if (cacheFile?.file != null) {
+      var file = cacheFile!.file;
+      var stream = file.openRead();
+      final List<int> bytes = [];
+      await for (var data in stream) {
+        bytes.addAll(data);
+      }
+      callback(bytes);
+      var contentLength = file.lengthSync();
+      completer.complete(
+          StreamedResponse(stream, 200, contentLength: contentLength, headers: {
+        "content-type": "video/mp4",
+        "content-length": contentLength.toString(),
+      }));
+      print("使用缓存");
+      return completer.future;
+    }
 
     service.getMusicUrl(music.id).then((musicUrl) {
       var request = Request('GET', Uri.parse(musicUrl.url));
       request.headers.addAll(musicUrl.headers ?? {});
       Client client = Client();
-      // StreamSubscription videoStream;
       client.send(request).then((response) {
         var isStart = false;
         response.stream.listen((List<int> data) {
@@ -41,7 +64,19 @@ class BBMusicSource extends StreamAudioSource {
             completer.complete(response);
             isStart = true;
           }
-          // TODO 后续加个缓存方法
+        }, onDone: () async {
+          // 缓冲完成将歌曲添加到缓存
+          var bytes = Uint8List.fromList(this._bytes);
+          var ext = musicUrl.url.split('?').first.split('.').last;
+          await audioCacheManage.putFile(
+            musicUrl.url,
+            bytes,
+            key: cacheKey,
+            fileExtension: ext,
+            maxAge: const Duration(days: 365 * 100),
+          );
+        }, onError: (error) {
+          completer.completeError(error);
         });
       }).catchError((error) {
         completer.completeError(error);
@@ -56,7 +91,7 @@ class BBMusicSource extends StreamAudioSource {
 
   _init() async {
     if (_isInit) return;
-    var resp = await BBMusicSource.getMusicStream(music, (List<int> data) {
+    var resp = await getMusicStream(music, (List<int> data) {
       _bytes.addAll(data);
     });
     _sourceLength = resp.contentLength ?? 0;
@@ -82,4 +117,8 @@ class BBMusicSource extends StreamAudioSource {
       contentType: _contentType,
     );
   }
+}
+
+music2cacheKey(MusicItem music) {
+  return "${music.origin.value}-${music.id}";
 }

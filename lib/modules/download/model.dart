@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bbmusic/modules/download/types.dart';
+import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -28,21 +29,20 @@ class DownloadModel extends ChangeNotifier {
   // 下载
   void download(List<MusicItem> musics) async {
     for (var item in musics) {
-      final m = await service.getMusicUrl(musics[0].id);
       final name = '${item.name}.mp4';
+      String resultPath = "";
       try {
         if (Platform.isAndroid) {
-          await downloadForAndroid(m.url, name, m.headers);
+          resultPath = await downloadForAndroid(item, name);
         } else {
-          await downloadForDesktop(m.url, name, m.headers);
+          resultPath = await downloadForDesktop(item, name);
         }
-        BotToast.showText(text: '下载完成');
+        BotToast.showText(text: '下载完成: $resultPath');
       } catch (e) {
         BotToast.showText(text: '下载失败');
         print('下载失败, $e');
       }
     }
-    // notifyListeners();
   }
 }
 
@@ -50,64 +50,73 @@ Future<Directory?> getDownloadDir() async {
   return await getDownloadsDirectory();
 }
 
-downloadForDesktop(
-  String url,
+Future<String> downloadForDesktop(
+  MusicItem music,
   String name,
-  Map<String, String>? headers,
 ) async {
   final dir = await getDownloadDir();
   final addr = path.join('${dir!.path}/$name');
 
+  // 查询缓存文件
+  final key = music2cacheKey(music);
+  final cacheFile = await audioCacheManage.getFileFromCache(key);
+  if (cacheFile?.file != null) {
+    final file = cacheFile!.file;
+    await file.copy(addr);
+    return addr;
+  }
+  // 从网络下载
+  final m = await service.getMusicUrl(music.id);
   await dio.download(
-    url,
+    m.url,
     addr,
-    options: Options(headers: headers),
+    options: Options(headers: m.headers),
   );
-  print("下载位置: $addr");
+  return addr;
 }
 
-downloadForAndroid(
-  String url,
+Future<String> downloadForAndroid(
+  MusicItem music,
   String name,
-  Map<String, String>? headers,
 ) async {
+  // 判断是否授权
   var status = await Permission.phone.status;
-  print("授权状态: $status");
-
   if (!status.isGranted) {
-    print("未授权");
     var per = await Permission.photos.request();
-    print("授权状态: $per");
-    if (per.isGranted) {
-      print("授权成功");
-    } else {
-      print("授权失败");
-      return;
+    if (!per.isGranted) {
+      throw '未授权';
     }
   }
-  var appDocDir = await getTemporaryDirectory();
+  // 文件保存路径
+  String savePath = "";
 
-  String savePath = path.join('${appDocDir.path}/$name');
-  print("临时目录：$savePath");
-
-  await dio.download(
-    url,
-    savePath,
-    options: Options(headers: headers),
-  );
-  print("临时目录保存完成");
-
-  try {
-    final result = await SaverGallery.saveFile(
-      file: savePath,
-      androidExistNotSave: true,
-      name: name,
-      androidRelativePath: "Movies",
+  // 查询缓存文件
+  final key = music2cacheKey(music);
+  final cacheFile = await audioCacheManage.getFileFromCache(key);
+  if (cacheFile?.file != null) {
+    savePath = cacheFile!.file.path;
+  } else {
+    // 没有缓存文件，从网络下载
+    var appDocDir = await getTemporaryDirectory();
+    savePath = path.join('${appDocDir.path}/$name');
+    final m = await service.getMusicUrl(music.id);
+    await dio.download(
+      m.url,
+      savePath,
+      options: Options(headers: m.headers),
     );
-    print(result);
-
-    print("下载位置: $savePath");
-  } catch (e) {
-    print(e);
   }
+
+  // 保存到相册
+  await SaverGallery.saveFile(
+    file: savePath,
+    androidExistNotSave: true,
+    name: name,
+    androidRelativePath: "Movies",
+  );
+  //根据文件路径删除临时文件
+  if (cacheFile?.file == null) {
+    await File(savePath).delete();
+  }
+  return "";
 }
