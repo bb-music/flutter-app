@@ -52,23 +52,30 @@ class PlayerCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
+              const SizedBox(height: 10),
               // 下载，添加到歌单
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    iconSize: 30,
-                    onPressed: () {
-                      Provider.of<DownloadModel>(context, listen: false)
-                          .download([player.current!]);
-                    },
-                    icon: const Icon(Icons.download),
+                  Tooltip(
+                    message: "下载",
+                    child: IconButton(
+                      iconSize: 30,
+                      onPressed: () {
+                        Provider.of<DownloadModel>(context, listen: false)
+                            .download([player.current!]);
+                      },
+                      icon: const Icon(Icons.download),
+                    ),
                   ),
-                  IconButton(
-                    iconSize: 40,
-                    onPressed: () {},
-                    icon: const Icon(Icons.playlist_add),
-                  ),
+                  Tooltip(
+                    message: "定时关闭",
+                    child: IconButton(
+                      iconSize: 30,
+                      onPressed: () {},
+                      icon: const Icon(Icons.alarm),
+                    ),
+                  )
                 ],
               ),
               // 进度
