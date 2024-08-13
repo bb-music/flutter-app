@@ -291,10 +291,11 @@ packages:
   just_audio_media_kit:
     dependency: "direct main"
     description:
-      name: just_audio_media_kit
-      sha256: "7f57d317fafa04cb3e70b924e8f632ffb7eca7a97a369e1e44738ed89fbd5da1"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "784d93b249e3db1c98f22827be357942f855eae0"
+      url: "https://github.com/lvyueyang/just_audio_media_kit"
+    source: git
     version: "2.0.5"
   just_audio_platform_interface:
     dependency: transitive
