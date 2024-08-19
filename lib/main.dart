@@ -31,7 +31,7 @@ void main() async {
   JustAudioMediaKit.ensureInitialized(
     iOS: false,
     windows: true,
-    android: true,
+    android: false,
     linux: true,
     macOS: true,
   );

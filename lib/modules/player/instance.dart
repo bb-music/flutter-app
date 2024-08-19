@@ -6,7 +6,7 @@ import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/player/const.dart';
 import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
-import 'package:bbmusic/origin_sdk/service.dart';
+import 'package:bbmusic/utils/utils.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +39,8 @@ class BBPlayer {
 
   Future<void> init() async {
     await _initLocalStorage();
+    var throttleEndNext = Throttle(const Duration(seconds: 1));
+
     // 监听播放状态
     audio.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.loading) {
@@ -48,7 +50,8 @@ class BBPlayer {
         isLoading = false;
       }
       if (state.processingState == ProcessingState.completed) {
-        endNext();
+        // 会重复触发，添加节流方法
+        throttleEndNext.call(() => endNext());
       }
       // notifyListeners();
     });
@@ -74,7 +77,8 @@ class BBPlayer {
 
   // 播放
   Future<void> play({MusicItem? music}) async {
-    print('PLAY');
+    print('PLAY: $music');
+    print('current: $current');
     if (music != null) {
       // 判断播放列表是否已存在
       if (playerList.where((e) => e.id == music.id).isEmpty) {
@@ -94,10 +98,11 @@ class BBPlayer {
         // 和 current 相等
         if (isPlaying) {
           // 播放中暂停
+          print("播放中暂停");
           await audio.pause();
         } else {
           // 暂停中恢复播放
-          print("暂停中恢复播放1");
+          print("暂停中恢复播放");
           await _play();
         }
       }
@@ -105,10 +110,11 @@ class BBPlayer {
       if (current != null) {
         if (isPlaying) {
           // 播放中暂停
+          print("播放中暂停");
           await audio.pause();
         } else {
           // 停止中恢复播放
-          print("停止中恢复播放2");
+          print("停止中恢复播放");
           await _play();
         }
       } else {
@@ -173,6 +179,7 @@ class BBPlayer {
 
   // 结束播放
   Future<void> endNext() async {
+    print("endNext");
     if (current == null) return;
 
     signalLoop() async {
@@ -284,11 +291,6 @@ class BBPlayer {
   Future<void> _play({MusicItem? music, bool isPlay = true}) async {
     if (music != null) {
       await audio.setAudioSource(BBMusicSource(music));
-      // MusicUrl musicUrl = await service.getMusicUrl(music.id);
-      // await audio.setUrl(
-      //   musicUrl.url,
-      //   headers: musicUrl.headers,
-      // );
     }
     if (isPlay) {
       await audio.play();
@@ -348,10 +350,10 @@ class BBPlayer {
 
       _play(music: current!, isPlay: false).then((res) {
         // 设置播放进度
-        // final pos = localStorage.getInt(_storageKeyPosition) ?? 0;
-        // if (pos > 0) {
-        //   audio.seek(Duration(milliseconds: pos));
-        // }
+        final pos = localStorage.getInt(_storageKeyPosition) ?? 0;
+        if (pos > 0) {
+          audio.seek(Duration(milliseconds: pos));
+        }
       });
     }
 

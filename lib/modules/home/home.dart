@@ -60,19 +60,19 @@ class HomeView extends StatelessWidget {
                 );
               },
             ),
-            _ItemCard(
-              icon: Icons.download,
-              title: '下载管理',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return const DownloadListView();
-                    },
-                  ),
-                );
-              },
-            ),
+            // _ItemCard(
+            //   icon: Icons.download,
+            //   title: '下载管理',
+            //   onTap: () {
+            //     Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (BuildContext context) {
+            //           return const DownloadListView();
+            //         },
+            //       ),
+            //     );
+            //   },
+            // ),
             _ItemCard(
               icon: Icons.settings,
               title: '设置',
