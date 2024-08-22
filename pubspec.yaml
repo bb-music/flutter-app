@@ -1,5 +1,5 @@
 name: bbmusic
-description: 'A new Flutter project.'
+description: '哔哔音乐，听歌自由'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -49,7 +49,7 @@ dependencies:
   cached_network_image: ^3.4.0
   path: ^1.9.0
   saver_gallery: ^3.0.5
-  window_manager: ^0.4.0
+  window_manager: ^0.4.2
   media_kit_libs_linux: ^1.1.3
   media_kit_libs_windows_audio: ^1.0.9
   just_audio_media_kit:
@@ -115,7 +115,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+# https://pub.dev/packages/flutter_launcher_icons
 flutter_icons:
   image_path: 'assets/ic_launch.png'
   android: true
-  ios: true
+  windows:
+    generate: true
+    image_path: 'assets/ic_launch.png'
+  macos:
+    generate: true
+    image_path: 'assets/ic_launch.png'

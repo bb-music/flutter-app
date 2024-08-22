@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/open_music_order/model.dart';
+import 'package:bbmusic/utils/window_manage.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/home/home.dart';
@@ -28,10 +31,13 @@ ThemeData theme = ThemeData(
 final _playerHandler = AudioPlayerHandler();
 
 void main() async {
+  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    await initWindowManage();
+  }
   JustAudioMediaKit.ensureInitialized(
     iOS: false,
-    windows: true,
     android: false,
+    windows: true,
     linux: true,
     macOS: true,
   );
