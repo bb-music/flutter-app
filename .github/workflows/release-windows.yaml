@@ -46,7 +46,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter build windows
-      - run: flutter build apk --split-per-abi
 
       - name: 压缩打包文件夹
         run: |
