@@ -25,7 +25,7 @@ jobs:
           tag_version=$(echo "$TAG" | sed 's/^v//')
           echo "$tag_version"
 
-          pubspec_version=$(echo grep version pubspec.yaml | head -n 1 | cut -d ':' -f 2 | tr -d '[:space:]')
+          pubspec_version=$(grep version pubspec.yaml | head -n 1 | cut -d ':' -f 2 | tr -d '[:space:]')
           echo "$pubspec_version"
 
           if [ "$tag_version" = "$pubspec_version" ]; then
