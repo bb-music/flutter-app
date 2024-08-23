@@ -22,9 +22,12 @@ jobs:
       - name: 获取 Tag 的 version
         id: get_tag_version
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          CLEANED_TAG=$(echo "$TAG" | sed 's/^v//')
-          echo "$CLEANED_TAG"
+          $tag = $env:GITHUB_REF
+          if ($tag -like 'refs/tags/*') {
+            $tag = $tag.Substring('refs/tags/'.Length)
+          }
+          $tag_version = $tag.Substring(1)
+          echo "$tag_version"
 
       - name: 获取 pubspec.yaml 的 version
         id: get_pubspec_version
