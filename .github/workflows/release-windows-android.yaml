@@ -33,12 +33,12 @@ jobs:
           $pubspec_version = $pubspec_version_line.Split(':')[1].Trim()
           echo "pubspecVersion: $pubspec_version"
 
-          if [ "$tag_version" = "$pubspec_version" ]; then
-            echo "版本号一致"
-          else
-            echo "版本号不一致！请检查!"
-            exit 1
-          fi
+          if ($tag_version -eq $pubspec_version) {
+              echo "版本号一致"
+          } else {
+              echo "版本号不一致！请检查!"
+              exit 1
+          }
 
       - name: 打包 win & apk
         uses: subosito/flutter-action@v2
