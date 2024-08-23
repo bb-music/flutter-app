@@ -1,8 +1,9 @@
+import 'package:bbmusic/components/music_list_tile/music_list_tile.dart';
+import 'package:bbmusic/modules/download/model.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
-import 'package:bbmusic/utils/clear_html_tags.dart';
 import 'package:provider/provider.dart';
 
 class PlayerList extends StatelessWidget {
@@ -73,33 +74,9 @@ class PlayerList extends StatelessWidget {
                         itemCount: player.playerList.length,
                         itemBuilder: (context, index) {
                           final item = player.playerList.toList()[index];
-                          return ListTile(
-                            title: Text(
-                              item.name,
-                              style: const TextStyle(
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            subtitle: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(item.origin.name),
-                                const SizedBox(width: 10),
-                                Text(seconds2duration(item.duration)),
-                              ],
-                            ),
-                            trailing: InkWell(
-                              borderRadius: BorderRadius.circular(4.0),
-                              child: const Icon(Icons.more_vert),
-                              onTap: () {
-                                showItemSheet(context, item);
-                              },
-                            ),
-                            onTap: () {
-                              Provider.of<PlayerModel>(context, listen: false)
-                                  .play(music: item);
-                            },
-                            onLongPress: () {
+                          return MusicListTile(
+                            item,
+                            onMore: () {
                               showItemSheet(context, item);
                             },
                           );
@@ -115,6 +92,8 @@ class PlayerList extends StatelessWidget {
 }
 
 void showItemSheet(BuildContext context, MusicItem data) {
+  final playerModel = Provider.of<PlayerModel>(context, listen: false);
+  final downloadModel = Provider.of<DownloadModel>(context, listen: false);
   openBottomSheet(context, [
     SheetItem(
       title: Text(
@@ -129,19 +108,18 @@ void showItemSheet(BuildContext context, MusicItem data) {
     SheetItem(
         title: const Text('播放'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false).play(music: data);
-          Navigator.of(context).pop();
+          playerModel.play(music: data);
         }),
     SheetItem(
         title: const Text('在播放列表中移除'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false)
-              .removePlayerList([data]);
-          Navigator.of(context).pop();
+          playerModel.removePlayerList([data]);
         }),
     SheetItem(
       title: const Text('下载'),
-      onPressed: () {},
+      onPressed: () {
+        downloadModel.download([data]);
+      },
     ),
   ]);
 }

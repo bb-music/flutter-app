@@ -15,8 +15,10 @@ class SheetItem {
 }
 
 void openBottomSheet(BuildContext context, List<SheetItem> items) {
-  double height =
-      (55 * items.where((e) => e.hidden != true).length).toDouble() + 30;
+  const double itemHeight = 55;
+  final double height =
+      (itemHeight * items.where((e) => e.hidden != true).length).toDouble() +
+          30;
 
   showModalBottomSheet(
     context: context,
@@ -25,28 +27,25 @@ void openBottomSheet(BuildContext context, List<SheetItem> items) {
       return SafeArea(
         bottom: true,
         child: Container(
-          color: Theme.of(context).colorScheme.background,
+          color: Theme.of(context).cardTheme.color,
           height: height,
           child: ListView(
             children: [
               ...items.toList().map((e) {
-                if (e.hidden == true) {
-                  return Container();
-                }
-                return SizedBox(
-                  height: 55,
-                  child: ListTile(
-                    leading: e.icon,
-                    title: e.title,
-                    onTap: e.onPressed != null
-                        ? () {
-                            Navigator.of(context).pop();
-                            e.onPressed!();
-                          }
-                        : null,
-                  ),
+                if (e.hidden == true) return Container();
+
+                return ListTile(
+                  minTileHeight: itemHeight,
+                  leading: e.icon,
+                  title: e.title,
+                  onTap: e.onPressed != null
+                      ? () {
+                          Navigator.of(context).pop();
+                          e.onPressed!();
+                        }
+                      : null,
                 );
-              })
+              }),
             ],
           ),
         ),

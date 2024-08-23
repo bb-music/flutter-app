@@ -33,9 +33,9 @@ class DownloadModel extends ChangeNotifier {
       String resultPath = "";
       try {
         if (Platform.isAndroid) {
-          resultPath = await downloadForAndroid(item, name);
+          resultPath = await _downloadForAndroid(item, name);
         } else {
-          resultPath = await downloadForDesktop(item, name);
+          resultPath = await _downloadForDesktop(item, name);
         }
         BotToast.showText(text: '下载完成: $resultPath');
       } catch (e) {
@@ -50,7 +50,7 @@ Future<Directory?> getDownloadDir() async {
   return await getDownloadsDirectory();
 }
 
-Future<String> downloadForDesktop(
+Future<String> _downloadForDesktop(
   MusicItem music,
   String name,
 ) async {
@@ -75,7 +75,7 @@ Future<String> downloadForDesktop(
   return addr;
 }
 
-Future<String> downloadForAndroid(
+Future<String> _downloadForAndroid(
   MusicItem music,
   String name,
 ) async {

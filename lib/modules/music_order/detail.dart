@@ -1,7 +1,7 @@
+import 'package:bbmusic/components/music_list_tile/music_list_tile.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
-import 'package:bbmusic/components/text_tags/tags.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
 import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/player/player.dart';
@@ -116,6 +116,13 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
                     collectToMusicOrder(context, musicOrder.musicList);
                   },
                 ),
+                SheetItem(
+                  title: const Text('下载全部'),
+                  hidden: widget.umoService != null,
+                  onPressed: () {
+                    collectToMusicOrder(context, musicOrder.musicList);
+                  },
+                )
               ]);
             },
           )
@@ -132,20 +139,11 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
               item.origin.name,
               seconds2duration(item.duration),
             ];
-            return ListTile(
-              title: Text(item.name),
-              subtitle: TextTags(tags: tags),
-              onTap: () {
-                Provider.of<PlayerModel>(context, listen: false)
-                    .play(music: item);
+            return MusicListTile(
+              item,
+              onMore: () {
+                _moreHandler(context, item);
               },
-              trailing: InkWell(
-                borderRadius: BorderRadius.circular(4.0),
-                child: const Icon(Icons.more_vert),
-                onTap: () {
-                  _moreHandler(context, item);
-                },
-              ),
             );
           }),
     );
