@@ -1,16 +1,32 @@
-import 'package:bbmusic/modules/download/list_view.dart';
 import 'package:bbmusic/modules/open_music_order/list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/music_order/list.dart';
 import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/search/search.dart';
 import 'package:bbmusic/modules/setting/setting.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
+  Future<Widget> buildAppVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    return SizedBox(
+      height: 60,
+      child: Center(
+        child: Text(
+          "版本号: ${packageInfo.version}",
+          style: const TextStyle(
+            color: Colors.black38,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    buildAppVersion();
     return Scaffold(
       appBar: AppBar(
         title: const Text("哔哔音乐"),
@@ -84,6 +100,18 @@ class HomeView extends StatelessWidget {
                     },
                   ),
                 );
+              },
+            ),
+            FutureBuilder(
+              future: buildAppVersion(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return snapshot.data!;
+                }
               },
             ),
           ],

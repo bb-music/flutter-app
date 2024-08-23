@@ -34,6 +34,7 @@ void main() async {
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     await initWindowManage();
   }
+  WidgetsFlutterBinding.ensureInitialized();
   JustAudioMediaKit.ensureInitialized(
     iOS: false,
     android: false,
