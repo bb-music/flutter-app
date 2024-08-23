@@ -46,6 +46,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter build macos
       - name: 压缩打包文件夹
         run: |

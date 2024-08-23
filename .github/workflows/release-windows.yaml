@@ -1,4 +1,4 @@
-name: 构建 Windows 和 Android 应用
+name: 构建 Windows 应用
 
 on:
   push:
@@ -40,10 +40,11 @@ jobs:
               exit 1
           }
 
-      - name: 打包 win & apk
+      - name: 打包 win
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter build windows
       - run: flutter build apk --split-per-abi
 
@@ -56,7 +57,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            ./bbmusic-windows.zip
-            ./build/app/outputs/flutter-apk/*
+          files: ./bbmusic-windows.zip
           token: ${{ secrets.GITHUB_TOKEN }}
