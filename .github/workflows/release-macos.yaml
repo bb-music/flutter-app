@@ -23,7 +23,8 @@ jobs:
         id: get_tag_version
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          echo "$TAG"
+          CLEANED_TAG=$(echo "$TAG" | sed 's/^v//')
+          echo "$CLEANED_TAG"
 
       - name: 获取 pubspec.yaml 的 version
         id: get_pubspec_version
