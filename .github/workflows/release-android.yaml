@@ -41,7 +41,7 @@ jobs:
           distribution: zulu
           java-version: 17
 
-      - name: 打包 apk
+      - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.22.2

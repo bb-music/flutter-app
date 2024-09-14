@@ -40,7 +40,7 @@ jobs:
               exit 1
           }
 
-      - name: 打包 win
+      - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
