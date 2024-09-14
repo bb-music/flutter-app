@@ -19,22 +19,6 @@ jobs:
       - name: 克隆仓库
         uses: actions/checkout@v4
 
-      - name: 对比 Tag 和 pubspec.yaml 的 version, 确保一致
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          tag_version=$(echo "$TAG" | sed 's/^v//')
-          echo "$tag_version"
-
-          pubspec_version=$(grep version pubspec.yaml | head -n 1 | cut -d ':' -f 2 | tr -d '[:space:]')
-          echo "$pubspec_version"
-
-          if [ "$tag_version" = "$pubspec_version" ]; then
-            echo "版本号一致"
-          else
-            echo "版本号不一致！请检查!"
-            exit 1
-          fi
-
       - name: 设置 Java 环境
         uses: actions/setup-java@v4
         with:

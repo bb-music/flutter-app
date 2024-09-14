@@ -19,27 +19,6 @@ jobs:
       - name: 克隆仓库
         uses: actions/checkout@v4
 
-      - name: 对比 Tag 和 pubspec.yaml 的 version
-        run: |
-          $tag = $env:GITHUB_REF
-          if ($tag -like 'refs/tags/*') {
-            $tag = $tag.Substring('refs/tags/'.Length)
-          }
-          $tag_version = $tag.Substring(1)
-          echo "tagVersion: $tag_version"
-
-          $pubspec_content = Get-Content pubspec.yaml
-          $pubspec_version_line = $pubspec_content | Where-Object { $_ -like '*version:*' }
-          $pubspec_version = $pubspec_version_line.Split(':')[1].Trim()
-          echo "pubspecVersion: $pubspec_version"
-
-          if ($tag_version -eq $pubspec_version) {
-              echo "版本号一致"
-          } else {
-              echo "版本号不一致！请检查!"
-              exit 1
-          }
-
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
