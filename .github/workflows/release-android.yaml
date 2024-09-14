@@ -32,6 +32,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter build apk --split-per-abi
+      - run: flutter build apk
 
       - name: 推送到 release
         uses: softprops/action-gh-release@v1
