@@ -179,7 +179,7 @@ class BBPlayer {
 
   // 结束播放
   Future<void> endNext() async {
-    print("endNext");
+    print("播放结束");
     if (current == null) return;
 
     signalLoop() async {
@@ -190,6 +190,9 @@ class BBPlayer {
     // 单曲循环
     if (playerMode == PlayerMode.signalLoop) {
       await signalLoop();
+      if (!audio.playing) {
+        audio.play();
+      }
       _updateLocalStorage();
       return;
     }
@@ -208,6 +211,9 @@ class BBPlayer {
         var r = Random().nextInt(len);
         await play(music: list[r]);
       }
+      if (!audio.playing) {
+        audio.play();
+      }
       _updateLocalStorage();
       return;
     }
@@ -217,6 +223,9 @@ class BBPlayer {
       if (index != playerList.length - 1) {
         await audio.seek(Duration.zero);
         await play(music: playerList[index + 1]);
+        if (!audio.playing) {
+          audio.play();
+        }
       }
       // 列表顺序结尾停止
     }
@@ -230,6 +239,9 @@ class BBPlayer {
         await play(music: playerList[0]);
       } else {
         await play(music: playerList[index + 1]);
+      }
+      if (!audio.playing) {
+        audio.play();
       }
     }
     _updateLocalStorage();

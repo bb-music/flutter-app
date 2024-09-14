@@ -31,11 +31,14 @@ abstract class UserMusicOrderOrigin {
   Future<MusicOrderItem> getDetail(String id);
 
   /// 添加歌曲
+  /// id: 歌单id
   Future<void> appendMusic(String id, List<MusicItem> musics);
 
   /// 更新歌曲
+  /// id: 歌单id
   Future<void> updateMusic(String id, List<MusicItem> musics);
 
   /// 移除歌曲
+  /// id: 歌单id
   Future<void> deleteMusic(String id, List<MusicItem> musics);
 }

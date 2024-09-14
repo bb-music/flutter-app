@@ -1,8 +1,10 @@
 import 'package:bbmusic/components/music_list_tile/music_list_tile.dart';
 import 'package:bbmusic/modules/download/model.dart';
+import 'package:bbmusic/modules/music_order/edit_music.dart';
+import 'package:bbmusic/modules/music_order/utils.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
-import 'package:bbmusic/modules/music_order/list.dart';
 import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/player/model.dart';
@@ -30,6 +32,38 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
     musicOrder = widget.data;
   }
 
+  _formItemHandler(MusicItem data) {
+    if (widget.umoService == null) {
+      return;
+    }
+    if (!widget.umoService!.canUse()) {
+      BotToast.showSimpleNotification(
+        title: "歌单源目前无法使用,请先完善配置",
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return EditMusic(
+            musicOrderId: widget.data.id,
+            service: widget.umoService!,
+            data: data,
+            onOk: (music) {
+              setState(() {
+                final ind = musicOrder.musicList
+                    .indexWhere((item) => item.id == data.id);
+                if (ind != -1) {
+                  musicOrder.musicList[ind] = music;
+                }
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+
   _moreHandler(BuildContext context, MusicItem item) {
     openBottomSheet(context, [
       SheetItem(
@@ -51,12 +85,14 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
       SheetItem(
         title: const Text('添加到歌单'),
         onPressed: () {
-          collectToMusicOrder(context, [item]);
+          collectToMusicOrder(context, [item], musicOrder: musicOrder);
         },
       ),
       SheetItem(
         title: const Text('编辑'),
-        onPressed: () {},
+        onPressed: () {
+          _formItemHandler(item);
+        },
         hidden: widget.umoService == null,
       ),
       SheetItem(
@@ -113,16 +149,20 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
                   title: const Text('加入歌单'),
                   hidden: widget.umoService != null,
                   onPressed: () {
-                    collectToMusicOrder(context, musicOrder.musicList);
+                    collectToMusicOrder(
+                      context,
+                      musicOrder.musicList,
+                      musicOrder: musicOrder,
+                    );
                   },
                 ),
-                SheetItem(
-                  title: const Text('下载全部'),
-                  hidden: widget.umoService != null,
-                  onPressed: () {
-                    collectToMusicOrder(context, musicOrder.musicList);
-                  },
-                )
+                // SheetItem(
+                //   title: const Text('下载全部'),
+                //   onPressed: () {
+                //     Provider.of<DownloadModel>(context, listen: false)
+                //         .download(musicOrder.musicList);
+                //   },
+                // )
               ]);
             },
           )

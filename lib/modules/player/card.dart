@@ -45,12 +45,24 @@ class PlayerCard extends StatelessWidget {
               // 封面
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: CachedNetworkImage(
-                  imageUrl: player.current!.cover,
-                  width: coverWidth,
-                  height: coverWidth,
-                  fit: BoxFit.cover,
-                ),
+                child: player.current?.cover != ""
+                    ? CachedNetworkImage(
+                        imageUrl: player.current!.cover,
+                        width: coverWidth,
+                        height: coverWidth,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        color: const Color.fromARGB(255, 227, 226, 226),
+                        width: coverWidth,
+                        height: coverWidth,
+                        child: Center(
+                          child: Text(
+                            player.current!.name,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(height: 10),
               // 下载，添加到歌单

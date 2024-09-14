@@ -1,5 +1,6 @@
 import 'package:bbmusic/components/music_list_tile/music_list_tile.dart';
 import 'package:bbmusic/modules/download/model.dart';
+import 'package:bbmusic/modules/music_order/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/player/model.dart';
@@ -106,15 +107,23 @@ void showItemSheet(BuildContext context, MusicItem data) {
       ),
     ),
     SheetItem(
-        title: const Text('播放'),
-        onPressed: () {
-          playerModel.play(music: data);
-        }),
+      title: const Text('播放'),
+      onPressed: () {
+        playerModel.play(music: data);
+      },
+    ),
     SheetItem(
-        title: const Text('在播放列表中移除'),
-        onPressed: () {
-          playerModel.removePlayerList([data]);
-        }),
+      title: const Text('添加到歌单'),
+      onPressed: () {
+        collectToMusicOrder(context, [data]);
+      },
+    ),
+    SheetItem(
+      title: const Text('在播放列表中移除'),
+      onPressed: () {
+        playerModel.removePlayerList([data]);
+      },
+    ),
     SheetItem(
       title: const Text('下载'),
       onPressed: () {

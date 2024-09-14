@@ -1,10 +1,10 @@
+import 'package:bbmusic/modules/music_order/edit_order.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
 import 'package:bbmusic/modules/music_order/model.dart';
-import 'package:bbmusic/modules/user_music_order/common.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +14,8 @@ typedef OnItemHandler = void Function(
 );
 
 class UserMusicOrderView extends StatelessWidget {
-  const UserMusicOrderView({super.key});
+  final MusicOrderItem? musicOrder;
+  const UserMusicOrderView({super.key, this.musicOrder});
 
   @override
   Widget build(BuildContext context) {
@@ -22,20 +23,22 @@ class UserMusicOrderView extends StatelessWidget {
       appBar: AppBar(
         title: const Text("我的歌单"),
       ),
-      body: UserMusicOrderList(),
+      body: UserMusicOrderList(musicOrder: musicOrder),
     );
   }
 }
 
 class UserMusicOrderList extends StatelessWidget {
+  final MusicOrderItem? musicOrder;
   // 是否为适用于收藏模式的样式
   final bool? collectModalStyle;
   // 点击每个选项时的回调
-  OnItemHandler? onItemTap;
-  UserMusicOrderList({
+  final OnItemHandler? onItemTap;
+  const UserMusicOrderList({
     super.key,
     this.collectModalStyle,
     this.onItemTap,
+    this.musicOrder,
   });
 
   @override
@@ -46,6 +49,7 @@ class UserMusicOrderList extends StatelessWidget {
           children: [
             ...umo.dataList.map((e) {
               return _MusicOrderListItemView(
+                musicOrder: musicOrder,
                 umo: e,
                 collectModalStyle: collectModalStyle,
                 onItemTap: onItemTap,
@@ -59,16 +63,18 @@ class UserMusicOrderList extends StatelessWidget {
 }
 
 class _MusicOrderListItemView extends StatefulWidget {
+  final MusicOrderItem? musicOrder;
   final UserMusicOrderOriginItem umo;
   // 是否为适用于收藏模式的样式
   final bool? collectModalStyle;
   // 点击每个选项时的回调
-  OnItemHandler? onItemTap;
+  final OnItemHandler? onItemTap;
 
-  _MusicOrderListItemView({
+  const _MusicOrderListItemView({
     super.key,
     this.collectModalStyle,
     this.onItemTap,
+    this.musicOrder,
     required this.umo,
   });
 
@@ -188,7 +194,7 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
             child: IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
-                _formItemHandler(null);
+                _formItemHandler(widget.musicOrder);
               },
             ),
           ),
@@ -269,11 +275,13 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
           ),
           title: Text(item.name),
           subtitle: item.desc.isNotEmpty ? Text(item.desc) : const Text('-'),
-          trailing: InkWell(
-            borderRadius: BorderRadius.circular(4.0),
-            onTap: moreHandler,
-            child: const Icon(Icons.more_vert),
-          ),
+          trailing: widget.collectModalStyle == true
+              ? null
+              : InkWell(
+                  borderRadius: BorderRadius.circular(4.0),
+                  onTap: moreHandler,
+                  child: const Icon(Icons.more_vert),
+                ),
           onLongPress: moreHandler,
         );
       }).toList(),
@@ -311,136 +319,4 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
       },
     );
   }
-}
-
-// 编辑/创建歌单
-class EditMusicOrder extends StatefulWidget {
-  final MusicOrderItem? data;
-  final UserMusicOrderOrigin service;
-
-  const EditMusicOrder({super.key, this.data, required this.service});
-
-  @override
-  State<EditMusicOrder> createState() => _EditMusicOrderState();
-}
-
-class _EditMusicOrderState extends State<EditMusicOrder> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
-
-  bool get _isCreate => widget.data == null;
-
-  @override
-  void initState() {
-    super.initState();
-    setState(() {
-      _nameController.text = widget.data?.name ?? '';
-      _descController.text = widget.data?.desc ?? '';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _isCreate ? const Text('创建歌单') : const Text('修改歌单'),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("歌单名称"),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _descController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("歌单描述"),
-              ),
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () async {
-                  final cancel = BotToast.showLoading();
-                  if (_isCreate) {
-                    await widget.service.create(
-                      MusicOrderItem(
-                        id: '',
-                        name: _nameController.text,
-                        desc: _descController.text,
-                        author: '',
-                        musicList: [],
-                      ),
-                    );
-                  } else {
-                    await widget.service.update(
-                      MusicOrderItem(
-                        id: widget.data!.id,
-                        name: _nameController.text,
-                        desc: _descController.text,
-                        cover: widget.data!.cover,
-                        author: widget.data!.author,
-                        musicList: widget.data!.musicList,
-                      ),
-                    );
-                  }
-                  cancel();
-                  if (context.mounted) {
-                    Provider.of<UserMusicOrderModel>(context, listen: false)
-                        .load(widget.service.name);
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: const Text('确 认'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 收藏到歌单
-collectToMusicOrder(BuildContext context, List<MusicItem> musics) {
-  showModalBottomSheet(
-    context: context,
-    showDragHandle: true,
-    constraints: BoxConstraints(
-      maxHeight: MediaQuery.of(context).size.height - 80,
-    ),
-    builder: (ctx) {
-      return UserMusicOrderList(
-        collectModalStyle: true,
-        onItemTap: (UserMusicOrderOriginItem umo, MusicOrderItem data) async {
-          final cancel = BotToast.showLoading();
-          try {
-            await umo.service.appendMusic(data.id, musics);
-            if (context.mounted) {
-              BotToast.showText(text: '添加成功');
-              Provider.of<UserMusicOrderModel>(context, listen: false)
-                  .load(umo.service.name);
-              Navigator.of(context).pop();
-            }
-          } catch (e) {
-            BotToast.showText(
-              text: '添加失败 $e',
-              duration: const Duration(seconds: 5),
-            );
-            rethrow;
-          }
-          cancel();
-        },
-      );
-    },
-  );
 }

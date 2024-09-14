@@ -1,6 +1,7 @@
 // import 'dart:async';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
-import 'package:bbmusic/modules/music_order/list.dart';
+import 'package:bbmusic/constants/cache_key.dart';
+import 'package:bbmusic/modules/music_order/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/text_tags/tags.dart';
@@ -9,7 +10,9 @@ import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -24,6 +27,7 @@ class _SearchViewState extends State<SearchView> {
   int _current = 1;
   bool _loading = false;
   final List<SearchItem> _searchItemList = [];
+  List<String> _searchHistory = [];
 
   // 搜索事件
   void _searchHandler(bool clean) async {
@@ -31,7 +35,7 @@ class _SearchViewState extends State<SearchView> {
     if (keyword.isEmpty) {
       setState(() {
         _searchItemList.clear();
-        _loading = true;
+        _loading = false;
       });
       return;
     }
@@ -41,6 +45,7 @@ class _SearchViewState extends State<SearchView> {
       _loading = true;
     });
     service.search(p).then((value) {
+      updateSearchHistory(keyword);
       setState(() {
         if (clean) {
           _searchItemList.clear();
@@ -104,15 +109,159 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
+  getSearchHistory() async {
+    final localStorage = await SharedPreferences.getInstance();
+    final list = localStorage.getStringList(CacheKey.searchHistory);
+
+    setState(() {
+      _searchHistory = list ?? [];
+    });
+  }
+
+  updateSearchHistory(String keyword, {bool isDelete = false}) async {
+    final localStorage = await SharedPreferences.getInstance();
+    final list = localStorage.getStringList(CacheKey.searchHistory) ?? [];
+    if (list.contains(keyword)) {
+      list.remove(keyword);
+    }
+    // 添加
+    if (!isDelete) {
+      list.insert(0, keyword);
+      // 最多 40 条
+      if (list.length > 40) {
+        list.removeLast();
+      }
+    }
+    await localStorage.setStringList(CacheKey.searchHistory, list);
+    setState(() {
+      _searchHistory = list;
+    });
+  }
+
   @override
   void dispose() {
     _keywordController.dispose();
     super.dispose();
   }
 
+  Widget buildSearchHistory() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.only(left: 10, right: 10),
+        width: double.infinity,
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: _searchHistory.map((keyword) {
+            return InkWell(
+              borderRadius: const BorderRadius.all(Radius.circular(4)),
+              onTap: () {
+                _keywordController.text = keyword;
+                _searchHandler(true);
+              },
+              onLongPress: () {
+                openBottomSheet(
+                  context,
+                  [
+                    SheetItem(
+                      title: const Text("删除"),
+                      onPressed: () {
+                        updateSearchHistory(keyword, isDelete: true);
+                      },
+                    ),
+                  ],
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.only(
+                  top: 6,
+                  bottom: 6,
+                  left: 12,
+                  right: 12,
+                ),
+                child: Text(keyword),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget buildBody(BuildContext context) {
+    if (_searchItemList.isEmpty) {
+      return buildSearchHistory();
+    }
+    var navigator = Navigator.of(context);
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.only(bottom: 100),
+      itemCount: _searchItemList.length + 1,
+      itemBuilder: (ctx, index) {
+        if (_searchItemList.isEmpty) {
+          return null;
+        }
+        if (index == _searchItemList.length) {
+          return SizedBox(
+            height: 40,
+            child: Center(
+              child: _loading ? const Text("加载中") : const Text("到底了"),
+            ),
+          );
+        }
+        final item = _searchItemList[index];
+        String cover = item.cover;
+        String name = item.name;
+        final List<String> tags = [item.origin.name, item.author];
+        if (cover.startsWith("//")) {
+          cover = "http:$cover";
+        }
+
+        return ListTile(
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(4.0),
+            child: CachedNetworkImage(
+              imageUrl: cover,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+          title: Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          subtitle: TextTags(tags: tags),
+          onTap: () async {
+            final detail = await service.searchDetail(item.id);
+            if (detail.type == SearchType.order) {
+              // 歌单
+              navigator.push(
+                MaterialPageRoute(
+                  builder: (context) => MusicOrderDetail(
+                    data: MusicOrderItem(
+                      id: detail.id,
+                      cover: detail.cover,
+                      name: detail.name,
+                      author: detail.author,
+                      desc: "",
+                      musicList: detail.musicList ?? [],
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              _onMusicClickHandler(detail);
+            }
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    var navigator = Navigator.of(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -124,70 +273,7 @@ class _SearchViewState extends State<SearchView> {
         ),
         toolbarHeight: 70,
       ),
-      body: ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.only(bottom: 100),
-          itemCount: _searchItemList.length + 1,
-          itemBuilder: (ctx, index) {
-            if (_searchItemList.isEmpty) {
-              return null;
-            }
-            if (index == _searchItemList.length) {
-              return SizedBox(
-                height: 40,
-                child: Center(
-                  child: _loading ? const Text("加载中") : const Text("到底了"),
-                ),
-              );
-            }
-            final item = _searchItemList[index];
-            String cover = item.cover;
-            String name = item.name;
-            final List<String> tags = [item.origin.name, item.author];
-            if (cover.startsWith("//")) {
-              cover = "http:$cover";
-            }
-
-            return ListTile(
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(4.0),
-                child: CachedNetworkImage(
-                  imageUrl: cover,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              title: Text(
-                name,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              subtitle: TextTags(tags: tags),
-              onTap: () async {
-                final detail = await service.searchDetail(item.id);
-                if (detail.type == SearchType.order) {
-                  // 歌单
-                  navigator.push(
-                    MaterialPageRoute(
-                      builder: (context) => MusicOrderDetail(
-                        data: MusicOrderItem(
-                          id: detail.id,
-                          cover: detail.cover,
-                          name: detail.name,
-                          author: detail.author,
-                          desc: "",
-                          musicList: detail.musicList ?? [],
-                        ),
-                      ),
-                    ),
-                  );
-                } else {
-                  _onMusicClickHandler(detail);
-                }
-              },
-            );
-          }),
+      body: buildBody(context),
       floatingActionButton: const PlayerView(),
     );
   }
