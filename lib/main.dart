@@ -40,7 +40,7 @@ void main() async {
     android: false,
     windows: true,
     linux: true,
-    macOS: true,
+    macOS: false,
   );
   final playerService = await AudioService.init(
     builder: () => _playerHandler,

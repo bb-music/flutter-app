@@ -16,6 +16,7 @@ class BBMusicSource extends StreamAudioSource {
   String _contentType = 'video/mp4';
   final MusicItem music;
   bool _isInit = false;
+  String get _cacheKey => music2cacheKey(music);
 
   @override
   MediaItem get tag {
@@ -31,26 +32,6 @@ class BBMusicSource extends StreamAudioSource {
     Function(List<int> data) callback,
   ) async {
     final completer = Completer<StreamedResponse>();
-    // 缓存判断
-    final cacheKey = music2cacheKey(music);
-    final cacheFile = await audioCacheManage.getFileFromCache(cacheKey);
-    if (cacheFile?.file != null) {
-      var file = cacheFile!.file;
-      var stream = file.openRead();
-      final List<int> bytes = [];
-      await for (var data in stream) {
-        bytes.addAll(data);
-      }
-      callback(bytes);
-      var contentLength = file.lengthSync();
-      completer.complete(
-          StreamedResponse(stream, 200, contentLength: contentLength, headers: {
-        "content-type": "video/mp4",
-        "content-length": contentLength.toString(),
-      }));
-      print("使用缓存");
-      return completer.future;
-    }
 
     service.getMusicUrl(music.id).then((musicUrl) {
       var request = Request('GET', Uri.parse(musicUrl.url));
@@ -71,7 +52,7 @@ class BBMusicSource extends StreamAudioSource {
           await audioCacheManage.putFile(
             musicUrl.url,
             bytes,
-            key: cacheKey,
+            key: _cacheKey,
             fileExtension: ext,
             maxAge: const Duration(days: 365 * 100),
           );
@@ -99,15 +80,46 @@ class BBMusicSource extends StreamAudioSource {
     _isInit = true;
   }
 
+  Future<StreamAudioResponse?> _getCacheFile(int? start, int? end) async {
+    // 读取缓存
+    final cacheFile = await audioCacheManage.getFileFromCache(_cacheKey);
+
+    if (cacheFile?.file != null) {
+      if (cacheFile!.file.existsSync()) {
+        var file = cacheFile.file;
+        final sourceLength = file.lengthSync();
+        return StreamAudioResponse(
+          rangeRequestsSupported: true,
+          sourceLength: sourceLength,
+          contentLength: (end ?? sourceLength) - (start ?? 0),
+          offset: start,
+          contentType: "video/mp4",
+          stream: file.openRead(start, end).asBroadcastStream(),
+        );
+      }
+    }
+    return null;
+  }
+
   @override
   Future<StreamAudioResponse> request([int? start, int? end]) async {
+    // 缓存判断
+    final cacheFile = await _getCacheFile(start, end);
+    if (cacheFile != null) {
+      // print('缓存命中');
+      return cacheFile;
+    }
     await _init();
     start ??= 0;
+    // print("开始长度: $start");
+    // print("结束长度: $end");
+    // print("bytes.length: ${_bytes.length}");
+    end ??= _bytes.length;
+
     // 轮询 _bytes 的长度, 等待 _bytes 有足够的数据
-    while (_bytes.length < start) {
+    while (_bytes.length < end) {
       await Future.delayed(const Duration(milliseconds: 300));
     }
-    end ??= _bytes.length;
 
     return StreamAudioResponse(
       sourceLength: _sourceLength,
@@ -119,6 +131,6 @@ class BBMusicSource extends StreamAudioSource {
   }
 }
 
-music2cacheKey(MusicItem music) {
+String music2cacheKey(MusicItem music) {
   return "${music.origin.value}-${music.id}";
 }

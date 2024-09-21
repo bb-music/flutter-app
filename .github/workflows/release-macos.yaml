@@ -1,15 +1,15 @@
 name: 构建 MacOS 应用
 
 on:
-  # push:
-  #   tags:
-  #     - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Version tag'
-        required: true
-        default: '0.0.1'
+  push:
+    tags:
+      - 'v*'
+  # workflow_dispatch:
+  #   inputs:
+  #     tag:
+  #       description: 'Version tag'
+  #       required: true
+  #       default: '0.0.1'
 
 jobs:
   main:
@@ -18,29 +18,6 @@ jobs:
     steps:
       - name: 克隆仓库
         uses: actions/checkout@v4
-
-      - name: 获取 Tag 的 version
-        id: get_tag_version
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          CLEANED_TAG=$(echo "$TAG" | sed 's/^v//')
-          echo "$CLEANED_TAG"
-
-      - name: 获取 pubspec.yaml 的 version
-        id: get_pubspec_version
-        run: |
-          grep version pubspec.yaml | head -n 1 | cut -d ':' -f 2 | tr -d '[:space:]'
-
-      - name: 对比 Tag 和 pubspec.yaml 的 version, 确保一致
-        run: |
-          tag_version=${{ steps.get_tag_version.outputs.tag_version }}
-          pubspec_version=${{ steps.get_pubspec_version.outputs.stdout }}
-          if [ "$tag_version" = "$pubspec_version" ]; then
-            echo "Versions match."
-          else
-            echo "版本号不一致！请检查!"
-            exit 1
-          fi
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2

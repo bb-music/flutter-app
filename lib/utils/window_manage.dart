@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -12,7 +14,9 @@ initWindowManage() async {
     titleBarStyle: TitleBarStyle.normal,
   );
   windowManager.setMaximizable(false);
-  windowManager.setIcon("assets/ic_launch.png");
+  if (Platform.isWindows) {
+    windowManager.setIcon("assets/ic_launch.png");
+  }
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
