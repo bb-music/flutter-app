@@ -177,6 +177,7 @@ class BiliClient implements OriginService {
       'aid': biliid.aid,
       'bvid': biliid.bvid,
       'cid': biliid.cid!,
+      'fnval': '4048'
     });
     final response = await dio.get(
       Uri.parse(url).replace(queryParameters: query).toString(),
@@ -184,11 +185,11 @@ class BiliClient implements OriginService {
 
     if (response.statusCode == 200) {
       final data = response.data['data'];
-      final durl = data['durl'].toList();
-      String url = '';
-      if (durl != null && durl.isNotEmpty) {
-        url = durl[0]['url'];
-      }
+      List<dynamic> audioList = data['dash']['audio'].toList();
+      // 排序，取带宽最大的音质最高
+      audioList.sort((a, b) => b['bandwidth'].compareTo(a['bandwidth']));
+      String url = audioList[0]['baseUrl'];
+      print(audioList);
       return MusicUrl(
         url: url,
         headers: {'Referer': _referer},
