@@ -77,6 +77,17 @@ class SearchItem {
   });
 }
 
+/// 搜索建议
+class SearchSuggestItem {
+  final String name; // 显示内容
+  final String value; // 关键词内容
+
+  const SearchSuggestItem({
+    required this.name,
+    required this.value,
+  });
+}
+
 /// 歌曲简要信息
 class MusicItem {
   final String id; // ID
@@ -202,6 +213,9 @@ class MusicUrl {
 abstract class OriginService {
   /// 搜索
   Future<SearchResponse> search(SearchParams params);
+
+  /// 搜索建议
+  Future<List<SearchSuggestItem>> searchSuggest(String keyword);
 
   /// 搜索详情
   Future<SearchItem> searchDetail(String id);

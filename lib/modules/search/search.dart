@@ -1,4 +1,5 @@
-// import 'dart:async';
+import 'dart:async';
+
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/music_order/utils.dart';
@@ -10,7 +11,6 @@ import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,10 +24,12 @@ class SearchView extends StatefulWidget {
 class _SearchViewState extends State<SearchView> {
   final ScrollController _scrollController = ScrollController();
   final _keywordController = TextEditingController(text: "");
+  final _focusNode = FocusNode();
   int _current = 1;
   bool _loading = false;
   final List<SearchItem> _searchItemList = [];
   List<String> _searchHistory = [];
+  List<SearchSuggestItem> _searchSuggest = [];
 
   // 搜索事件
   void _searchHandler(bool clean) async {
@@ -102,11 +104,11 @@ class _SearchViewState extends State<SearchView> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        // Reach the bottom, load more data
         _current += 1;
         _searchHandler(false);
       }
     });
+    getSearchHistory();
   }
 
   getSearchHistory() async {
@@ -141,7 +143,21 @@ class _SearchViewState extends State<SearchView> {
   @override
   void dispose() {
     _keywordController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  Timer? _debounceTimer;
+  _onInputChange(String value) {
+    // 防抖
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      service.searchSuggest(_keywordController.text).then((list) {
+        setState(() {
+          _searchSuggest = list;
+        });
+      });
+    });
   }
 
   Widget buildSearchHistory() {
@@ -188,7 +204,25 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  Widget buildSearchSuggest() {
+    return ListView(
+      children: _searchSuggest.map((item) {
+        // 渲染 html
+        return ListTile(
+          title: Text(item.value),
+          onTap: () {
+            _keywordController.text = item.value;
+            _searchHandler(true);
+          },
+        );
+      }).toList(),
+    );
+  }
+
   Widget buildBody(BuildContext context) {
+    if (_focusNode.hasFocus && _searchSuggest.isNotEmpty) {
+      return buildSearchSuggest();
+    }
     if (_searchItemList.isEmpty) {
       return buildSearchHistory();
     }
@@ -270,6 +304,8 @@ class _SearchViewState extends State<SearchView> {
           onSearch: () {
             _searchHandler(true);
           },
+          onInput: _onInputChange,
+          focusNode: _focusNode,
         ),
         toolbarHeight: 70,
       ),
@@ -279,16 +315,25 @@ class _SearchViewState extends State<SearchView> {
   }
 }
 
-class _SearchForm extends StatelessWidget {
+class _SearchForm extends StatefulWidget {
   final TextEditingController keywordController;
   final Function() onSearch;
+  final Function(String value) onInput;
+  final FocusNode focusNode;
 
   const _SearchForm({
     super.key,
     required this.keywordController,
     required this.onSearch,
+    required this.onInput,
+    required this.focusNode,
   });
 
+  @override
+  State<_SearchForm> createState() => _SearchFormState();
+}
+
+class _SearchFormState extends State<_SearchForm> {
   @override
   Widget build(BuildContext context) {
     var navigator = Navigator.of(context);
@@ -303,13 +348,18 @@ class _SearchForm extends StatelessWidget {
         children: [
           Expanded(
             child: TextField(
-              controller: keywordController,
-              onSubmitted: (value) => onSearch(),
+              controller: widget.keywordController,
+              onSubmitted: (value) => widget.onSearch(),
+              autofocus: true,
+              focusNode: widget.focusNode,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 hintText: "请输入歌曲/歌单名",
                 contentPadding: EdgeInsets.only(left: 25, right: 10),
               ),
+              onChanged: (value) {
+                widget.onInput(value);
+              },
             ),
           ),
           Container(

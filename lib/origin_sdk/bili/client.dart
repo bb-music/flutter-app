@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bbmusic/origin_sdk/bili/utils.dart';
 import 'package:bbmusic/utils/logs.dart';
@@ -154,6 +156,34 @@ class BiliClient implements OriginService {
       logs.e(
         "bili: 搜索条目详情获取失败",
         error: {"body": response.data, 'id': id},
+      );
+      throw response.data;
+    }
+  }
+
+  // 搜索建议
+  @override
+  Future<List<SearchSuggestItem>> searchSuggest(String keyword) async {
+    await init();
+    const url = 'https://s.search.bilibili.com/main/suggest';
+    Map<String, String> query = _signParams({
+      'term': keyword,
+    });
+    final response = await dio.get(
+      Uri.parse(url).replace(queryParameters: query).toString(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> tags = jsonDecode(response.data)['result']['tag'];
+      List<SearchSuggestItem> result = [];
+      tags.toList().forEach((t) {
+        result.add(SearchSuggestItem(name: t['name'], value: t['value']));
+      });
+      return result;
+    } else {
+      logs.e(
+        "bili: 搜索条目详情获取失败",
+        error: {"body": response.data, 'keyword': keyword},
       );
       throw response.data;
     }
