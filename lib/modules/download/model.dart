@@ -29,7 +29,7 @@ class DownloadModel extends ChangeNotifier {
   // 下载
   void download(List<MusicItem> musics) async {
     for (var item in musics) {
-      final name = '${item.name}.mp4';
+      final name = '${item.name}.mp3';
       String resultPath = "";
       try {
         if (Platform.isAndroid) {
@@ -80,25 +80,32 @@ Future<String> _downloadForAndroid(
   String name,
 ) async {
   // 判断是否授权
-  var status = await Permission.phone.status;
+  var status = await Permission.manageExternalStorage.status;
   if (!status.isGranted) {
-    var per = await Permission.photos.request();
+    var per = await Permission.manageExternalStorage.request();
     if (!per.isGranted) {
       throw '未授权';
     }
   }
-  // 文件保存路径
-  String savePath = "";
+
+  // 获取目录下的文件列表
+  final downloadDir = path.join('/storage/emulated/0/Download/哔哔音乐');
+  // 判断目录是否存在
+  final dir = Directory(downloadDir);
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
 
   // 查询缓存文件
   final key = music2cacheKey(music);
   final cacheFile = await audioCacheManage.getFileFromCache(key);
+  // 保存路径
+  String savePath = path.join(downloadDir, name);
   if (cacheFile?.file != null) {
-    savePath = cacheFile!.file.path;
+    // 文件保存
+    cacheFile!.file.copy(savePath);
   } else {
     // 没有缓存文件，从网络下载
-    var appDocDir = await getTemporaryDirectory();
-    savePath = path.join('${appDocDir.path}/$name');
     final m = await service.getMusicUrl(music.id);
     await dio.download(
       m.url,
@@ -107,16 +114,5 @@ Future<String> _downloadForAndroid(
     );
   }
 
-  // 保存到相册
-  await SaverGallery.saveFile(
-    file: savePath,
-    androidExistNotSave: true,
-    name: name,
-    androidRelativePath: "Movies",
-  );
-  //根据文件路径删除临时文件
-  if (cacheFile?.file == null) {
-    await File(savePath).delete();
-  }
-  return "";
+  return savePath;
 }

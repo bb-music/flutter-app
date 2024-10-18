@@ -116,6 +116,8 @@ class _SearchViewState extends State<SearchView> {
       }
     });
     getSearchHistory();
+    // 输入框选中
+    _focusNode.requestFocus();
   }
 
   getSearchHistory() async {
@@ -150,6 +152,7 @@ class _SearchViewState extends State<SearchView> {
   @override
   void dispose() {
     _keywordController.dispose();
+    _focusNode.unfocus();
     _focusNode.dispose();
     super.dispose();
   }
@@ -220,6 +223,7 @@ class _SearchViewState extends State<SearchView> {
           onTap: () {
             _keywordController.text = item.value;
             _searchHandler(true);
+            _focusNode.unfocus();
           },
         );
       }).toList(),
@@ -357,7 +361,6 @@ class _SearchFormState extends State<_SearchForm> {
             child: TextField(
               controller: widget.keywordController,
               onSubmitted: (value) => widget.onSearch(),
-              autofocus: true,
               focusNode: widget.focusNode,
               decoration: const InputDecoration(
                 border: InputBorder.none,
