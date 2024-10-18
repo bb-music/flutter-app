@@ -60,6 +60,7 @@ class _SearchViewState extends State<SearchView> {
 
   // 单个歌曲点击
   void _onMusicClickHandler(SearchItem detail) {
+    final player = Provider.of<PlayerModel>(context, listen: false);
     final music = MusicItem(
       id: detail.id,
       cover: detail.cover,
@@ -82,7 +83,7 @@ class _SearchViewState extends State<SearchView> {
       SheetItem(
         title: const Text('播放'),
         onPressed: () {
-          Provider.of<PlayerModel>(context, listen: false).play(music: music);
+          player.play(music: music);
         },
       ),
       SheetItem(
@@ -93,6 +94,12 @@ class _SearchViewState extends State<SearchView> {
         title: const Text('添加到歌单'),
         onPressed: () {
           collectToMusicOrder(context, [music]);
+        },
+      ),
+      SheetItem(
+        title: const Text('添加到播放列表'),
+        onPressed: () {
+          player.addPlayerList([music]);
         },
       ),
     ]);

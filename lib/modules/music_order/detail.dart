@@ -111,6 +111,13 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
         hidden: widget.umoService == null,
       ),
       SheetItem(
+        title: const Text('添加到播放列表'),
+        onPressed: () {
+          Provider.of<PlayerModel>(context, listen: false)
+              .addPlayerList([item]);
+        },
+      ),
+      SheetItem(
         title: const Text('下载'),
         onPressed: () {
           Provider.of<DownloadModel>(context, listen: false).download([item]);
