@@ -25,14 +25,31 @@ jobs:
           channel: stable
           cache: true
       - run: flutter build macos
-      - name: 压缩打包文件夹
+
+      - name: 安装 create-image
+        uses: actions/checkout@v2
+        with:
+          repository: create-dmg/create-dmg
+          path: ./build/create-dmg
+          ref: master
+
+      - name: 打包为 DMG
+        shell: bash
+        working-directory: ./build
         run: |
-          tar -zcvf bbmusic-linux.tar.gz ./build/linux/x64/release
+          ./create-dmg/create-dmg \
+            --volname bbmusic \
+            --window-size 400 200  \
+            --icon-size 100  \
+            --icon bbmusic 30 70  \
+            --app-drop-link 200 70  \
+            build/bbmusic.dmg  \
+            build/macos/Build/Products/Release/bbmusic.app
 
       - name: 推送到 release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: ./bbmusic-windows.zip
+          files: ./build/bbmusic.dmg
           token: ${{ secrets.GITHUB_TOKEN }}

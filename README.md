@@ -47,3 +47,9 @@
 
 1. [SocialSisterYi](https://github.com/SocialSisterYi/bilibili-API-collect) 感谢这个库的作者和相关贡献者
 2. 感谢广大 B 站网友们提供的视频资源
+
+## mac 打包命令
+
+```bash
+create-dmg --volname bbmusic --window-size 400 200 --icon-size 100 --icon bbmusic 30 70 --app-drop-link 200 70  build/bbmusic.dmg build/macos/Build/Products/Release/bbmusic.app
+```
