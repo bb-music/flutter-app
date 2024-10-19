@@ -25,6 +25,12 @@ jobs:
           distribution: zulu
           java-version: 17
 
+      - name: 将screct变量添加签名文件
+        run: |
+          echo ${{ secrets.KEYSTORE_BASE64 }}  | base64 --decode > ./android/app/bbmusic-keystore.jks
+          echo ${{ secrets.KEY_PROPERTIES }} > ./android/key.properties
+          ls ./android
+
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
