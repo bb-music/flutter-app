@@ -29,8 +29,8 @@ jobs:
         run: |
           echo ${{ secrets.KEYSTORE_BASE64 }}  | base64 --decode > ./android/app/bbmusic-keystore.jks
           echo -e "${{ secrets.KEY_PROPERTIES }}" > ./android/key.properties
-          ls ./android/app
-          cat ./android/key.properties
+          ls -lh ./android/app/bbmusic-keystore.jks
+          md5sum ./android/app/bbmusic-keystore.jks
 
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
