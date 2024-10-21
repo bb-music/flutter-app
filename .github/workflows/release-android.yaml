@@ -28,7 +28,7 @@ jobs:
       - name: 将screct变量添加签名文件
         run: |
           echo ${{ secrets.KEYSTORE_BASE64 }}  | base64 --decode > ./android/app/bbmusic-keystore.jks
-          echo ${{ secrets.KEY_PROPERTIES }} > ./android/key.properties
+          echo -e "${{ secrets.KEY_PROPERTIES }}" > ./android/key.properties
           ls ./android/app
           cat ./android/key.properties
 
