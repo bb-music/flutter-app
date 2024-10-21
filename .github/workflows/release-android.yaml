@@ -29,7 +29,7 @@ jobs:
         run: |
           echo ${{ secrets.KEYSTORE_BASE64 }}  | base64 --decode > ./android/app/bbmusic-keystore.jks
           echo ${{ secrets.KEY_PROPERTIES }} > ./android/key.properties
-          ll -a ./android/app
+          ls ./android/app
           cat ./android/key.properties
 
       - name: 安装 Flutter
