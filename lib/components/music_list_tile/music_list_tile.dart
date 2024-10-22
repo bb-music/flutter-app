@@ -17,23 +17,36 @@ class MusicListTile extends StatelessWidget {
       music.origin.name,
       seconds2duration(music.duration),
     ];
-    return ListTile(
-      title: Text(
-        music.name,
-        style: const TextStyle(
-          overflow: TextOverflow.ellipsis,
+    return Consumer<PlayerModel>(builder: (context, player, child) {
+      final isPlaying =
+          (player.current != null && player.current!.id == music.id);
+      final playingIcon = isPlaying
+          ? Icon(
+              player.isPlaying ? Icons.play_arrow : Icons.pause,
+              size: 18,
+              color: Theme.of(context).primaryColor,
+            )
+          : null;
+      return ListTile(
+        title: Text(
+          music.name,
+          style: TextStyle(
+            overflow: TextOverflow.ellipsis,
+            color: isPlaying ? Theme.of(context).primaryColor : null,
+          ),
         ),
-      ),
-      subtitle: TextTags(tags: tags),
-      trailing: InkWell(
-        borderRadius: BorderRadius.circular(4.0),
-        onTap: onMore,
-        child: const Icon(Icons.more_vert),
-      ),
-      onTap: () {
-        Provider.of<PlayerModel>(context, listen: false).play(music: music);
-      },
-      onLongPress: onMore,
-    );
+        leading: playingIcon,
+        subtitle: TextTags(tags: tags),
+        trailing: InkWell(
+          borderRadius: BorderRadius.circular(4.0),
+          onTap: onMore,
+          child: const Icon(Icons.more_vert),
+        ),
+        onTap: () {
+          Provider.of<PlayerModel>(context, listen: false).play(music: music);
+        },
+        onLongPress: onMore,
+      );
+    });
   }
 }
