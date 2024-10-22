@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/user_music_order/common.dart';
 import 'package:bbmusic/modules/user_music_order/user_music_order.dart';
@@ -18,6 +19,8 @@ class UserMusicOrderModel extends ChangeNotifier {
     );
   }
 
+  getList() async {}
+
   // 重载单个源的列表
   load(String originName) async {
     final index = dataList.indexWhere((d) => d.service.name == originName);
@@ -35,6 +38,7 @@ class UserMusicOrderModel extends ChangeNotifier {
       await umo.service.initConfig();
       umo.list = umo.service.getList();
     } catch (e) {
+      BotToast.showText(text: "加载失败");
       rethrow;
     }
     umo.loading = true;

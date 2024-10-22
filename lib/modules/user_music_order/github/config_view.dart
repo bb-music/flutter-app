@@ -37,13 +37,11 @@ class _GithubConfigViewState extends State<GithubConfigView> {
   }
 
   _saveHandler() async {
-    final localStorage = await SharedPreferences.getInstance();
-    localStorage.setString(
-        GithubOriginConst.cacheKeyRepoUrl, _repoUrlController.text);
-    localStorage.setString(
-        GithubOriginConst.cacheKeyToken, _tokenController.text);
-    localStorage.setString(
-        GithubOriginConst.cacheKeyBranch, _branchController.text);
+    await saveConfigData(
+      repoUrl: _repoUrlController.text,
+      token: _tokenController.text,
+      branch: _branchController.text,
+    );
     if (widget.onChange != null) widget.onChange!();
     BotToast.showText(text: '保存成功');
   }
@@ -104,4 +102,16 @@ class _GithubConfigViewState extends State<GithubConfigView> {
       ),
     );
   }
+}
+
+/// 配置信息缓存到本地
+saveConfigData({
+  required String repoUrl,
+  required String token,
+  required String branch,
+}) async {
+  final localStorage = await SharedPreferences.getInstance();
+  localStorage.setString(GithubOriginConst.cacheKeyRepoUrl, repoUrl);
+  localStorage.setString(GithubOriginConst.cacheKeyToken, token);
+  localStorage.setString(GithubOriginConst.cacheKeyBranch, branch);
 }

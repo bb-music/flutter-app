@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:saver_gallery/saver_gallery.dart';
 
 final dio = Dio();
 
@@ -47,6 +46,9 @@ class DownloadModel extends ChangeNotifier {
 }
 
 Future<Directory?> getDownloadDir() async {
+  if (Platform.isAndroid) {
+    return Directory('/storage/emulated/0/Download/哔哔音乐');
+  }
   return await getDownloadsDirectory();
 }
 
@@ -89,10 +91,9 @@ Future<String> _downloadForAndroid(
   }
 
   // 获取目录下的文件列表
-  final downloadDir = path.join('/storage/emulated/0/Download/哔哔音乐');
+  final dir = await getDownloadDir();
   // 判断目录是否存在
-  final dir = Directory(downloadDir);
-  if (!dir.existsSync()) {
+  if (!dir!.existsSync()) {
     dir.createSync(recursive: true);
   }
 
@@ -100,7 +101,7 @@ Future<String> _downloadForAndroid(
   final key = music2cacheKey(music);
   final cacheFile = await audioCacheManage.getFileFromCache(key);
   // 保存路径
-  String savePath = path.join(downloadDir, name);
+  String savePath = path.join(dir!.path, name);
   if (cacheFile?.file != null) {
     // 文件保存
     cacheFile!.file.copy(savePath);

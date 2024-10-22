@@ -6,6 +6,13 @@ abstract class UserMusicOrderOrigin {
   String get cname => '';
   IconData? get icon => null;
 
+  /// 将配置信息转为 json
+  /// 必须带有 name
+  Map<String, dynamic> getConfig();
+
+  /// 设置配置信息
+  Future<void> setConfig(Map<String, dynamic> config);
+
   /// 初始化歌单源的配置信息
   Widget? configBuild();
 

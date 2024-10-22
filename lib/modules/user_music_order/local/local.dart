@@ -31,6 +31,17 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
   }
 
   @override
+  getConfig() {
+    return {
+      'name': name,
+      'cname': cname,
+    };
+  }
+
+  @override
+  setConfig(config) async {}
+
+  @override
   configBuild() {
     return null;
   }
@@ -76,9 +87,7 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
   }
 
   Future<void> _update(List<MusicOrderItem> list) async {
-    final localStorage = await SharedPreferences.getInstance();
-    final jsonStr = json.encode(list);
-    await localStorage.setString(LocalOriginConst.cacheKey, jsonStr);
+    await updateLocalMusicOrderData(list);
   }
 
   @override
@@ -215,4 +224,10 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
 
     return _update(list);
   }
+}
+
+Future<void> updateLocalMusicOrderData(List<MusicOrderItem> list) async {
+  final localStorage = await SharedPreferences.getInstance();
+  final jsonStr = json.encode(list);
+  await localStorage.setString(LocalOriginConst.cacheKey, jsonStr);
 }

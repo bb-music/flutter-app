@@ -121,11 +121,10 @@ class _SearchViewState extends State<SearchView> {
   }
 
   getSearchHistory() async {
-    final localStorage = await SharedPreferences.getInstance();
-    final list = localStorage.getStringList(CacheKey.searchHistory);
+    final list = await getSearchHistoryData();
 
     setState(() {
-      _searchHistory = list ?? [];
+      _searchHistory = list;
     });
   }
 
@@ -385,4 +384,15 @@ class _SearchFormState extends State<_SearchForm> {
       ),
     );
   }
+}
+
+Future<List<String>> getSearchHistoryData() async {
+  final localStorage = await SharedPreferences.getInstance();
+  final list = localStorage.getStringList(CacheKey.searchHistory);
+  return list ?? [];
+}
+
+Future updateSearchHistoryData(List<String> list) async {
+  final localStorage = await SharedPreferences.getInstance();
+  await localStorage.setStringList(CacheKey.searchHistory, list);
 }

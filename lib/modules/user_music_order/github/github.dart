@@ -4,6 +4,7 @@ import 'package:bbmusic/icons/icon.dart';
 import 'package:bbmusic/modules/user_music_order/github/config_view.dart';
 import 'package:bbmusic/modules/user_music_order/github/constants.dart';
 import 'package:bbmusic/modules/user_music_order/github/types.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
@@ -65,8 +66,29 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       final res = GithubFile.fromJson(json.decode(response.body));
       return res;
     } else {
-      throw Exception('$cname歌单获取失败');
+      final msg = '$cname歌单获取失败';
+      BotToast.showText(text: msg);
+      return Future.error(msg);
     }
+  }
+
+  @override
+  getConfig() {
+    return {
+      'name': name,
+      'cname': cname,
+      'repoUrl': repoUrl,
+      'branch': branch,
+      'token': token,
+    };
+  }
+
+  @override
+  setConfig(config) async {
+    repoUrl = config['repoUrl'];
+    branch = config['branch'];
+    token = config['token'];
+    await saveConfigData(repoUrl: repoUrl, token: token, branch: branch);
   }
 
   @override
@@ -94,11 +116,15 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     if (!canUse()) {
       return [];
     }
-    final res = await _loadData();
-    return res.content;
+    try {
+      final res = await _loadData();
+      return res.content;
+    } catch (e) {
+      return [];
+    }
   }
 
-  _update(List<MusicOrderItem> list, String message, String sha) async {
+  Future _update(List<MusicOrderItem> list, String message, String sha) async {
     final jsonStr = json.encode(list);
     final content = base64Encode(
       utf8.encode(jsonStr),
@@ -120,18 +146,18 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('编辑歌单失败');
+      return Future.error('编辑歌单失败');
     }
   }
 
   @override
-  create(data) async {
+  Future create(data) async {
     final res = await _loadData();
     final list = res.content;
 
     // 判断歌单是否已存在
     if (list.where((e) => e.name == data.name).isNotEmpty) {
-      throw Exception('歌单已存在');
+      return Future.error('歌单已存在');
     }
     String id = uuid.v4();
     list.add(
@@ -149,14 +175,14 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   }
 
   @override
-  update(data) async {
+  Future update(data) async {
     final res = await _loadData();
     final list = res.content;
     final index = list.indexWhere((e) => e.id == data.id);
     final current = list[index];
     // 判断歌单是否已存在
     if (index < 0) {
-      throw Exception('歌单不存在');
+      return Future.error('歌单不存在');
     }
 
     // 替换 list 指定位置的值
@@ -173,13 +199,13 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   }
 
   @override
-  delete(data) async {
+  Future delete(data) async {
     final res = await _loadData();
     final list = res.content;
     final index = list.indexWhere((e) => e.id == data.id);
     // 判断歌单是否已存在
     if (index < 0) {
-      throw Exception('歌单不存在');
+      return Future.error('歌单不存在');
     }
     list.removeAt(index);
     return _update(list, '创建歌单${data.name}($data.id)', res.sha);
@@ -190,7 +216,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     final list = await getList();
     final index = list.indexWhere((r) => r.id == id);
     if (index < 0) {
-      throw Exception("歌单不存在");
+      return Future.error('歌单不存在');
     }
     return list[index];
   }
