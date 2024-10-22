@@ -4,4 +4,5 @@ class GithubOriginConst {
   static String cacheKeyRepoUrl = 'umo_github_repo_url';
   static String cacheKeyBranch = 'umo_github_branch';
   static String cacheKeyToken = 'umo_github_token';
+  static String cacheKeyFilepath = 'umo_github_filepath';
 }

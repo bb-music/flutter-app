@@ -5,7 +5,7 @@ import 'package:bbmusic/modules/user_music_order/github/config_view.dart';
 import 'package:bbmusic/modules/user_music_order/github/constants.dart';
 import 'package:bbmusic/modules/user_music_order/github/types.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +14,11 @@ import 'package:uuid/uuid.dart';
 import '../common.dart';
 
 const uuid = Uuid();
+final dio = Dio();
 
 class UserMusicOrderForGithub implements UserMusicOrderOrigin {
+  final dio = Dio();
+
   @override
   String name = GithubOriginConst.name;
   @override
@@ -27,19 +30,22 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   String repoUrl = '';
   String branch = '';
   String token = '';
+  String filepath = '';
 
   Uri get _path {
     RepoInfo r = RepoInfo.format(repoUrl);
     return Uri.parse(
-        'https://api.github.com/repos/${r.owner}/${r.repo}/contents/my.json');
+      'https://api.github.com/repos/${r.owner}/${r.repo}/contents/$filepath',
+    );
   }
 
   Map<String, String> get _headers {
-    return {
+    final opt = {
       'Authorization': 'Bearer ${token}',
       'X-GitHub-Api-Version': '2022-11-28',
       'Accept': 'application/vnd.github+json',
     };
+    return opt;
   }
 
   UserMusicOrderForGithub() {
@@ -54,18 +60,12 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   }
 
   Future<GithubFile> _loadData() async {
-    Map<String, String> query = {};
-    if (branch.isNotEmpty) {
-      query['ref'] = branch;
-    }
-    final response = await http.get(
-      _path.replace(queryParameters: query),
-      headers: _headers,
-    );
-    if (response.statusCode == 200) {
-      final res = GithubFile.fromJson(json.decode(response.body));
+    Map<String, String> query = {'ref': branch};
+    try {
+      final response = await dio.get(_path.toString(), queryParameters: query);
+      final res = GithubFile.fromJson(response.data);
       return res;
-    } else {
+    } catch (e) {
       final msg = '$cname歌单获取失败';
       BotToast.showText(text: msg);
       return Future.error(msg);
@@ -80,6 +80,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       'repoUrl': repoUrl,
       'branch': branch,
       'token': token,
+      'filepath': filepath,
     };
   }
 
@@ -88,7 +89,13 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     repoUrl = config['repoUrl'];
     branch = config['branch'];
     token = config['token'];
-    await saveConfigData(repoUrl: repoUrl, token: token, branch: branch);
+    filepath = config['filepath'];
+    await saveConfigData(
+      repoUrl: repoUrl,
+      token: token,
+      branch: branch,
+      filepath: filepath,
+    );
   }
 
   @override
@@ -100,7 +107,10 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
 
   @override
   bool canUse() {
-    return repoUrl.isNotEmpty && token.isNotEmpty;
+    return repoUrl.isNotEmpty &&
+        token.isNotEmpty &&
+        branch.isNotEmpty &&
+        filepath.isNotEmpty;
   }
 
   @override
@@ -109,6 +119,9 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     repoUrl = localStorage.getString(GithubOriginConst.cacheKeyRepoUrl) ?? '';
     token = localStorage.getString(GithubOriginConst.cacheKeyToken) ?? '';
     branch = localStorage.getString(GithubOriginConst.cacheKeyBranch) ?? '';
+    filepath = localStorage.getString(GithubOriginConst.cacheKeyFilepath) ?? '';
+
+    dio.options.headers = _headers;
   }
 
   @override
@@ -139,13 +152,12 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       body['branch'] = branch;
     }
 
-    final response = await http.put(
-      _path,
-      headers: _headers,
-      body: json.encode(body),
-    );
-
-    if (response.statusCode != 200) {
+    try {
+      await dio.put(
+        _path.toString(),
+        data: body,
+      );
+    } catch (e) {
       return Future.error('编辑歌单失败');
     }
   }

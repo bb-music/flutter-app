@@ -18,6 +18,7 @@ class _GithubConfigViewState extends State<GithubConfigView> {
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _repoUrlController = TextEditingController();
   final TextEditingController _branchController = TextEditingController();
+  final TextEditingController _filepathController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +35,8 @@ class _GithubConfigViewState extends State<GithubConfigView> {
         localStorage.getString(GithubOriginConst.cacheKeyToken) ?? '';
     _branchController.text =
         localStorage.getString(GithubOriginConst.cacheKeyBranch) ?? '';
+    _filepathController.text =
+        localStorage.getString(GithubOriginConst.cacheKeyFilepath) ?? '';
   }
 
   _saveHandler() async {
@@ -41,6 +44,7 @@ class _GithubConfigViewState extends State<GithubConfigView> {
       repoUrl: _repoUrlController.text,
       token: _tokenController.text,
       branch: _branchController.text,
+      filepath: _filepathController.text,
     );
     if (widget.onChange != null) widget.onChange!();
     BotToast.showText(text: '保存成功');
@@ -83,6 +87,14 @@ class _GithubConfigViewState extends State<GithubConfigView> {
                 label: Text("分支"),
               ),
             ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _filepathController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                label: Text("文件路径"),
+              ),
+            ),
           ],
         ),
       ),
@@ -109,9 +121,11 @@ saveConfigData({
   required String repoUrl,
   required String token,
   required String branch,
+  required String filepath,
 }) async {
   final localStorage = await SharedPreferences.getInstance();
   localStorage.setString(GithubOriginConst.cacheKeyRepoUrl, repoUrl);
   localStorage.setString(GithubOriginConst.cacheKeyToken, token);
   localStorage.setString(GithubOriginConst.cacheKeyBranch, branch);
+  localStorage.setString(GithubOriginConst.cacheKeyFilepath, filepath);
 }
