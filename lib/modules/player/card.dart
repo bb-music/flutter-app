@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bbmusic/modules/download/model.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/player/player.dart';
@@ -65,7 +66,7 @@ class PlayerCard extends StatelessWidget {
                       ),
               ),
               const SizedBox(height: 10),
-              // 下载，添加到歌单
+              // 下载，定时播放
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -84,7 +85,9 @@ class PlayerCard extends StatelessWidget {
                     message: "定时关闭",
                     child: IconButton(
                       iconSize: 30,
-                      onPressed: () {},
+                      onPressed: () {
+                        autoClose(context);
+                      },
                       icon: const Icon(Icons.alarm),
                     ),
                   )
@@ -199,4 +202,73 @@ class _PlayerProgressState extends State<PlayerProgress> {
       );
     });
   }
+}
+
+class AutoCloseItem {
+  final String label;
+  final Duration value;
+
+  AutoCloseItem({required this.label, required this.value});
+}
+
+final List<AutoCloseItem> AutoCloseList = [
+  AutoCloseItem(label: "1 分钟", value: const Duration(minutes: 1)),
+  AutoCloseItem(label: "5 分钟", value: const Duration(minutes: 5)),
+  AutoCloseItem(label: "10 分钟", value: const Duration(minutes: 10)),
+  AutoCloseItem(label: "15 分钟", value: const Duration(minutes: 15)),
+  AutoCloseItem(label: "30 分钟", value: const Duration(minutes: 30)),
+  AutoCloseItem(label: "60 分钟", value: const Duration(minutes: 60)),
+];
+
+// 定时关闭
+autoClose(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    showDragHandle: true,
+    builder: (BuildContext ctx) {
+      return SafeArea(
+        bottom: true,
+        child: Container(
+          color: Theme.of(context).cardTheme.color,
+          padding: const EdgeInsets.all(10),
+          height: 180,
+          width: double.infinity,
+          child: Column(
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 18,
+                children: AutoCloseList.map((item) {
+                  return OutlinedButton(
+                    child: Text(item.label),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      BotToast.showText(text: "${item.label}后自动关闭");
+                      Provider.of<PlayerModel>(context, listen: false)
+                          .autoCloseHandler(item.value);
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Consumer<PlayerModel>(builder: (context, player, child) {
+                    return Checkbox(
+                      value: player.playDoneAutoClose,
+                      onChanged: (e) {
+                        player.togglePlayDoneAutoClose();
+                      },
+                    );
+                  }),
+                  const Text("当前歌曲播放完成后再关闭"),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

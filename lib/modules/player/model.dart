@@ -96,6 +96,19 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void togglePlayDoneAutoClose() {
+    _playerHandler?.player.autoClose.togglePlayDoneAutoClose();
+    notifyListeners();
+  }
+
+  get playDoneAutoClose {
+    return _playerHandler?.player.autoClose.openPlayDoneAutoClose ?? false;
+  }
+
+  autoCloseHandler(Duration duration) {
+    return _playerHandler?.player.autoClose.close(duration);
+  }
+
   // 监听播放进度
   StreamSubscription<Duration>? listenPosition(
     void Function(Duration)? onData,

@@ -59,10 +59,32 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     }
   }
 
+  // 判断文件是否存在，不存在则创建
+  _initFile() async {
+    try {
+      await dio.get(_path.toString(), queryParameters: {'ref': branch});
+    } catch (e) {
+      if (e is DioException) {
+        if ((e).response?.statusCode == 404) {
+          // 没有则文件创建
+          try {
+            await _update([], '创建歌单文件', '');
+          } catch (e) {
+            BotToast.showText(text: "创建文件失败");
+            return Future.error(e);
+          }
+        }
+      }
+
+      return Future.error(e);
+    }
+  }
+
   Future<GithubFile> _loadData() async {
     Map<String, String> query = {'ref': branch};
+    Response<dynamic>? response;
     try {
-      final response = await dio.get(_path.toString(), queryParameters: query);
+      response = await dio.get(_path.toString(), queryParameters: query);
       final res = GithubFile.fromJson(response.data);
       return res;
     } catch (e) {
@@ -130,6 +152,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       return [];
     }
     try {
+      await _initFile();
       final res = await _loadData();
       return res.content;
     } catch (e) {

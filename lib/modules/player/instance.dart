@@ -37,7 +37,12 @@ class BBPlayer {
   // 播放模式
   PlayerMode playerMode = PlayerMode.listLoop;
 
+  late AutoCloseMusic autoClose;
+
   Future<void> init() async {
+    autoClose = AutoCloseMusic(onPause: () {
+      pause();
+    });
     await _initLocalStorage();
     var throttleEndNext = Throttle(const Duration(seconds: 1));
 
@@ -51,7 +56,13 @@ class BBPlayer {
       }
       if (state.processingState == ProcessingState.completed) {
         // 会重复触发，添加节流方法
-        throttleEndNext.call(() => endNext());
+        throttleEndNext.call(() {
+          if (autoClose.isPlayDoneAutoClose) {
+            autoClose.isPlayDoneAutoClose = false;
+            return pause();
+          }
+          return endNext();
+        });
       }
       // notifyListeners();
     });
@@ -404,5 +415,51 @@ class BBPlayer {
     }
 
     // notifyListeners();
+  }
+}
+
+/// 定时关闭
+class AutoCloseMusic {
+  bool openPlayDoneAutoClose = false; // 是否开启等待播放完成后再关闭
+  bool isPlayDoneAutoClose = false;
+  DateTime? closeTime;
+  Timer? autoCloseTimer;
+
+  final Function onPause;
+
+  AutoCloseMusic({
+    required this.onPause,
+  });
+
+  void togglePlayDoneAutoClose() {
+    openPlayDoneAutoClose = !openPlayDoneAutoClose;
+  }
+
+  // 自动关闭
+  void close(Duration duration) {
+    isPlayDoneAutoClose = false;
+    if (autoCloseTimer != null) {
+      autoCloseTimer!.cancel();
+    }
+
+    // 设置时间为 5 min 后
+    final now = DateTime.now();
+    closeTime = now.add(duration);
+
+    autoCloseTimer = Timer(duration, () {
+      if (openPlayDoneAutoClose) {
+        isPlayDoneAutoClose = true;
+      } else {
+        onPause();
+      }
+    });
+  }
+
+  void cancel() {
+    closeTime = null;
+    isPlayDoneAutoClose = false;
+    if (autoCloseTimer != null) {
+      autoCloseTimer!.cancel();
+    }
   }
 }
