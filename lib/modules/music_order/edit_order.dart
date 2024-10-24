@@ -21,7 +21,7 @@ class _EditMusicOrderState extends State<EditMusicOrder> {
   final TextEditingController _coverController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
 
-  bool get _isCreate => widget.data?.id == "";
+  bool get _isCreate => (widget.data?.id == "" || widget.data == null);
 
   @override
   void initState() {
@@ -73,35 +73,39 @@ class _EditMusicOrderState extends State<EditMusicOrder> {
               child: FilledButton(
                 onPressed: () async {
                   final cancel = BotToast.showLoading();
-                  if (_isCreate) {
-                    await widget.service.create(
-                      MusicOrderItem(
+                  try {
+                    if (_isCreate) {
+                      final music = MusicOrderItem(
                         id: '',
                         author: '',
                         name: _nameController.text,
                         desc: _descController.text,
                         cover: _coverController.text,
                         musicList: [],
-                      ),
-                    );
-                  } else {
-                    await widget.service.update(
-                      MusicOrderItem(
+                      );
+                      await widget.service.create(music);
+                    } else {
+                      final music = MusicOrderItem(
                         id: widget.data!.id,
                         name: _nameController.text,
                         desc: _descController.text,
                         cover: _coverController.text,
                         author: widget.data!.author,
                         musicList: widget.data!.musicList,
-                      ),
+                      );
+                      await widget.service.update(music);
+                    }
+                    if (context.mounted) {
+                      Provider.of<UserMusicOrderModel>(context, listen: false)
+                          .load(widget.service.name);
+                      Navigator.of(context).pop();
+                    }
+                  } catch (e) {
+                    BotToast.showText(
+                      text: "${_isCreate ? "创建" : "更新"}失败 ${e.toString()}",
                     );
                   }
                   cancel();
-                  if (context.mounted) {
-                    Provider.of<UserMusicOrderModel>(context, listen: false)
-                        .load(widget.service.name);
-                    Navigator.of(context).pop();
-                  }
                 },
                 child: const Text('确 认'),
               ),

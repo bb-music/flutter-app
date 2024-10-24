@@ -2,7 +2,7 @@ name: bbmusic
 description: '哔哔音乐，听歌自由'
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.1.0+5
+version: 1.1.1+6
 
 environment:
   sdk: '>=3.3.1 <4.0.0'

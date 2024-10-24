@@ -71,7 +71,8 @@ void main() async {
           );
           // 初始化歌单
           Provider.of<UserMusicOrderModel>(context, listen: false).init();
-
+          // 消息提示框的默认配置
+          BotToast.defaultOption.text.duration = const Duration(seconds: 10);
           BotToast.defaultOption.text.textStyle = TextStyle(
             fontSize: 12,
             color: Theme.of(context).cardColor,

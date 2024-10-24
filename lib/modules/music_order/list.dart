@@ -114,6 +114,49 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
     super.initState();
   }
 
+  // 跳转歌单详情
+  _gotoMusicOrderDetail(MusicOrderItem item) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (BuildContext context) {
+        return MusicOrderDetail(
+          data: item,
+          umoService: widget.umo.service,
+        );
+      },
+    ));
+  }
+
+  // 歌单更多操作
+  _moreHandler(MusicOrderItem item) {
+    if (widget.collectModalStyle == true) return;
+    openBottomSheet(context, [
+      SheetItem(
+        title: const Text('查看歌单'),
+        onPressed: () {
+          _gotoMusicOrderDetail(item);
+        },
+      ),
+      SheetItem(
+        title: const Text('编辑歌单'),
+        onPressed: () {
+          _formItemHandler(item);
+        },
+      ),
+      SheetItem(
+        title: const Text('删除歌单'),
+        onPressed: () {
+          widget.umo.service.delete(item).then((value) {
+            BotToast.showSimpleNotification(title: "已删除");
+            Provider.of<UserMusicOrderModel>(
+              context,
+              listen: false,
+            ).load(widget.umo.service.name);
+          });
+        },
+      ),
+    ]);
+  }
+
   Widget _cardBuild(List<Widget> children) {
     return SizedBox(
       height: 60,
@@ -208,84 +251,57 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
   Widget _listBuild(List<MusicOrderItem> list) {
     if (!_canUse) _emptyBuild();
     return Column(
-      children: list.map((item) {
-        gotoDetail() {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (BuildContext context) {
-              return MusicOrderDetail(
-                data: item,
-                umoService: widget.umo.service,
-              );
-            },
-          ));
-        }
-
-        moreHandler() {
-          if (widget.collectModalStyle == true) return;
-          openBottomSheet(context, [
-            SheetItem(
-              title: const Text('查看歌单'),
-              onPressed: gotoDetail,
-            ),
-            SheetItem(
-              title: const Text('编辑歌单'),
-              onPressed: () {
-                _formItemHandler(item);
-              },
-            ),
-            SheetItem(
-              title: const Text('删除歌单'),
-              onPressed: () {
-                widget.umo.service.delete(item).then((value) {
-                  BotToast.showSimpleNotification(title: "已删除");
-                  Provider.of<UserMusicOrderModel>(
-                    context,
-                    listen: false,
-                  ).load(widget.umo.service.name);
-                });
-              },
-            ),
-          ]);
-        }
-
-        return ListTile(
-          onTap: () {
-            if (widget.collectModalStyle == true) {
-              if (widget.onItemTap != null) {
-                widget.onItemTap!(widget.umo, item);
+      children: [
+        const SizedBox(height: 2),
+        ...list.map((item) {
+          return ListTile(
+            onTap: () {
+              if (widget.collectModalStyle == true) {
+                if (widget.onItemTap != null) {
+                  widget.onItemTap!(widget.umo, item);
+                }
+                return;
               }
-              return;
-            }
 
-            gotoDetail();
-          },
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: item.cover != null && item.cover!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: item.cover!,
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 40,
-                    height: 40,
-                    color: const Color.fromARGB(179, 209, 205, 205),
+              _gotoMusicOrderDetail(item);
+            },
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: item.cover != null && item.cover!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: item.cover!,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 40,
+                      height: 40,
+                      color: const Color.fromARGB(179, 209, 205, 205),
+                      child: Center(
+                        child: Text(item.name.substring(0, 1)),
+                      ),
+                    ),
+            ),
+            title: Text(item.name),
+            subtitle: item.desc.isNotEmpty ? Text(item.desc) : null,
+            minTileHeight: 60,
+            trailing: widget.collectModalStyle == true
+                ? null
+                : InkWell(
+                    borderRadius: BorderRadius.circular(4.0),
+                    onTap: () {
+                      _moreHandler(item);
+                    },
+                    child: const Icon(Icons.more_vert),
                   ),
-          ),
-          title: Text(item.name),
-          subtitle: item.desc.isNotEmpty ? Text(item.desc) : const Text('-'),
-          trailing: widget.collectModalStyle == true
-              ? null
-              : InkWell(
-                  borderRadius: BorderRadius.circular(4.0),
-                  onTap: moreHandler,
-                  child: const Icon(Icons.more_vert),
-                ),
-          onLongPress: moreHandler,
-        );
-      }).toList(),
+            onLongPress: () {
+              _moreHandler(item);
+            },
+          );
+        }),
+        const SizedBox(height: 15),
+      ],
     );
   }
 

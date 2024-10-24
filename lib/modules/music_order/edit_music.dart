@@ -69,25 +69,29 @@ class _EditMusicState extends State<EditMusic> {
               child: FilledButton(
                 onPressed: () async {
                   final cancel = BotToast.showLoading();
-                  final music = MusicItem(
-                    id: widget.data.id,
-                    origin: widget.data.origin,
-                    duration: widget.data.duration,
-                    cover: widget.data.cover,
-                    name: _nameController.text,
-                    author: _authorController.text,
-                  );
-                  await widget.service.updateMusic(
-                    widget.musicOrderId,
-                    [music],
-                  );
-                  cancel();
-                  if (context.mounted) {
-                    Provider.of<UserMusicOrderModel>(context, listen: false)
-                        .load(widget.service.name);
-                    Navigator.of(context).pop();
+                  try {
+                    final music = MusicItem(
+                      id: widget.data.id,
+                      origin: widget.data.origin,
+                      duration: widget.data.duration,
+                      cover: widget.data.cover,
+                      name: _nameController.text,
+                      author: _authorController.text,
+                    );
+                    await widget.service.updateMusic(
+                      widget.musicOrderId,
+                      [music],
+                    );
+                    if (context.mounted) {
+                      Provider.of<UserMusicOrderModel>(context, listen: false)
+                          .load(widget.service.name);
+                      Navigator.of(context).pop();
+                    }
+                    widget.onOk(music);
+                  } catch (e) {
+                    BotToast.showText(text: "歌曲更新失败");
                   }
-                  widget.onOk(music);
+                  cancel();
                 },
                 child: const Text('确 认'),
               ),
