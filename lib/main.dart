@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/open_music_order/model.dart';
+import 'package:bbmusic/utils/update_version.dart';
 import 'package:bbmusic/utils/window_manage.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -78,6 +80,9 @@ void main() async {
             color: Theme.of(context).cardColor,
           );
           child = botToastBuilder(context, child);
+          Timer(Duration(seconds: 1), () {
+            updateAppVersion();
+          });
           return child;
         },
       ),
