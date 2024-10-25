@@ -154,7 +154,7 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
                 ),
                 SheetItem(
                   title: const Text('加入歌单'),
-                  hidden: widget.umoService != null,
+                  // hidden: widget.umoService != null,
                   onPressed: () {
                     collectToMusicOrder(
                       context,
