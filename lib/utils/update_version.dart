@@ -17,7 +17,8 @@ updateAppVersion() async {
     );
     String latestVersion = resp.data['tag_name'];
     latestVersion = latestVersion.replaceFirst('v', '');
-    String currentVersion = '1.0.0';
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String currentVersion = packageInfo.version;
     // 版本号对比
     if (isUpdateVersion(latestVersion, currentVersion)) {
       BotToast.showCustomLoading(
