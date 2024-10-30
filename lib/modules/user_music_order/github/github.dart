@@ -8,7 +8,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../common.dart';
@@ -48,17 +47,6 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
     return opt;
   }
 
-  UserMusicOrderForGithub() {
-    _load();
-  }
-
-  Future<void> _load() async {
-    await initConfig();
-    if (listenChange != null) {
-      listenChange!();
-    }
-  }
-
   // 判断文件是否存在，不存在则创建
   _initFile() async {
     try {
@@ -95,36 +83,11 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   }
 
   @override
-  getConfig() {
-    return {
-      'name': name,
-      'cname': cname,
-      'repoUrl': repoUrl,
-      'branch': branch,
-      'token': token,
-      'filepath': filepath,
-    };
-  }
-
-  @override
-  setConfig(config) async {
-    repoUrl = config['repoUrl'];
-    branch = config['branch'];
-    token = config['token'];
-    filepath = config['filepath'];
-    await saveConfigData(
-      repoUrl: repoUrl,
-      token: token,
-      branch: branch,
-      filepath: filepath,
-    );
-  }
-
-  @override
-  Widget configBuild() {
-    return GithubConfigView(onChange: () {
-      _load();
-    });
+  Widget? configBuild({
+    Map<String, dynamic>? value,
+    required Function(Map<String, dynamic>) onChange,
+  }) {
+    return GithubConfigView(value: value, onChange: onChange);
   }
 
   @override
@@ -136,13 +99,11 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
   }
 
   @override
-  Future<void> initConfig() async {
-    final localStorage = await SharedPreferences.getInstance();
-    repoUrl = localStorage.getString(GithubOriginConst.cacheKeyRepoUrl) ?? '';
-    token = localStorage.getString(GithubOriginConst.cacheKeyToken) ?? '';
-    branch = localStorage.getString(GithubOriginConst.cacheKeyBranch) ?? '';
-    filepath = localStorage.getString(GithubOriginConst.cacheKeyFilepath) ?? '';
-
+  Future<void> initConfig(config) async {
+    repoUrl = config[GithubOriginConst.configFieldRepoUrl] ?? '';
+    token = config[GithubOriginConst.configFieldToken] ?? '';
+    branch = config[GithubOriginConst.configFieldBranch] ?? '';
+    filepath = config[GithubOriginConst.configFieldFilepath] ?? '';
     dio.options.headers = _headers;
   }
 
@@ -156,6 +117,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       final res = await _loadData();
       return res.content;
     } catch (e) {
+      BotToast.showText(text: "获取歌单列表失败");
       return [];
     }
   }

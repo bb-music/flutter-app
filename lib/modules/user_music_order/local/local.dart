@@ -31,28 +31,20 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
   }
 
   @override
-  getConfig() {
-    return {
-      'name': name,
-      'cname': cname,
-    };
-  }
-
-  @override
-  setConfig(config) async {}
-
-  @override
-  configBuild() {
-    return null;
-  }
-
-  @override
   canUse() {
     return true;
   }
 
   @override
-  initConfig() async {}
+  Widget? configBuild({
+    Map<String, dynamic>? value,
+    required Function(Map<String, dynamic>) onChange,
+  }) {
+    return null;
+  }
+
+  @override
+  initConfig(config) async {}
 
   @override
   Future<List<MusicOrderItem>> getList() async {

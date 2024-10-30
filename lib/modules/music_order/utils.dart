@@ -1,7 +1,7 @@
 import 'package:bbmusic/modules/music_order/list.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
 
@@ -34,8 +34,8 @@ collectToMusicOrder(
             await umo.service.appendMusic(data.id, musics);
             if (context.mounted) {
               BotToast.showText(text: '添加成功');
-              Provider.of<UserMusicOrderModel>(context, listen: false)
-                  .load(umo.service.name);
+              Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
+                  .loadSignal(umo.id);
               Navigator.of(context).pop();
             }
           } catch (e) {

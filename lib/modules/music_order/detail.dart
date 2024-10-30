@@ -2,10 +2,10 @@ import 'package:bbmusic/components/music_list_tile/music_list_tile.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/music_order/edit_music.dart';
 import 'package:bbmusic/modules/music_order/utils.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/player/player.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/user_music_order/common.dart';
@@ -15,9 +15,11 @@ import 'package:provider/provider.dart';
 
 class MusicOrderDetail extends StatefulWidget {
   final MusicOrderItem data;
+  String? originSettingId; // 歌单源配置 ID
   final UserMusicOrderOrigin? umoService;
 
-  const MusicOrderDetail({super.key, this.umoService, required this.data});
+  MusicOrderDetail(
+      {super.key, this.umoService, this.originSettingId, required this.data});
 
   @override
   _MusicOrderDetailState createState() => _MusicOrderDetailState();
@@ -45,8 +47,13 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
+          if (widget.umoService == null || widget.originSettingId == null) {
+            BotToast.showText(text: "缺少歌单配置参数");
+            return const SizedBox();
+          }
           return EditMusic(
             musicOrderId: widget.data.id,
+            originSettingId: widget.originSettingId!,
             service: widget.umoService!,
             data: data,
             onOk: (music) {
@@ -103,9 +110,9 @@ class _MusicOrderDetailState extends State<MusicOrderDetail> {
             musicOrder.musicList.remove(item);
           });
 
-          if (context.mounted) {
-            Provider.of<UserMusicOrderModel>(context, listen: false)
-                .load(widget.umoService!.name);
+          if (context.mounted && widget.originSettingId != null) {
+            Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
+                .loadSignal(widget.originSettingId!);
           }
         },
         hidden: widget.umoService == null,

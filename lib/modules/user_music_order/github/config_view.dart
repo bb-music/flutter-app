@@ -1,14 +1,17 @@
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
+import 'dart:async';
+
 import 'package:bbmusic/modules/user_music_order/github/constants.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 
 class GithubConfigView extends StatefulWidget {
-  final Function? onChange;
+  final Map<String, dynamic>? value;
+  final Function(Map<String, dynamic>) onChange;
 
-  const GithubConfigView({super.key, this.onChange});
+  const GithubConfigView({
+    super.key,
+    required this.value,
+    required this.onChange,
+  });
 
   @override
   State<GithubConfigView> createState() => _GithubConfigViewState();
@@ -19,6 +22,7 @@ class _GithubConfigViewState extends State<GithubConfigView> {
   final TextEditingController _repoUrlController = TextEditingController();
   final TextEditingController _branchController = TextEditingController();
   final TextEditingController _filepathController = TextEditingController();
+  Timer? _timer;
 
   @override
   void initState() {
@@ -27,105 +31,76 @@ class _GithubConfigViewState extends State<GithubConfigView> {
   }
 
   _init() async {
-    final localStorage = await SharedPreferences.getInstance();
-
     _repoUrlController.text =
-        localStorage.getString(GithubOriginConst.cacheKeyRepoUrl) ?? '';
+        widget.value?[GithubOriginConst.configFieldRepoUrl] ?? '';
     _tokenController.text =
-        localStorage.getString(GithubOriginConst.cacheKeyToken) ?? '';
+        widget.value?[GithubOriginConst.configFieldToken] ?? '';
     _branchController.text =
-        localStorage.getString(GithubOriginConst.cacheKeyBranch) ?? '';
+        widget.value?[GithubOriginConst.configFieldBranch] ?? '';
     _filepathController.text =
-        localStorage.getString(GithubOriginConst.cacheKeyFilepath) ?? '';
+        widget.value?[GithubOriginConst.configFieldFilepath] ?? '';
   }
 
-  _saveHandler() async {
-    await saveConfigData(
-      repoUrl: _repoUrlController.text,
-      token: _tokenController.text,
-      branch: _branchController.text,
-      filepath: _filepathController.text,
-    );
-    if (widget.onChange != null) widget.onChange!();
-    BotToast.showText(text: '保存成功');
+  _changeHandler() async {
+    if (_timer != null) _timer!.cancel();
+    _timer = Timer(const Duration(milliseconds: 500), () {
+      widget.onChange({
+        GithubOriginConst.configFieldRepoUrl: _repoUrlController.text,
+        GithubOriginConst.configFieldToken: _tokenController.text,
+        GithubOriginConst.configFieldBranch: _branchController.text,
+        GithubOriginConst.configFieldFilepath: _filepathController.text
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(GithubOriginConst.cname),
-      ),
-      body: Container(
-        padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 10,
-        ),
-        child: Column(
-          children: [
-            TextField(
-              controller: _repoUrlController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("仓库地址"),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _tokenController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("Token"),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _branchController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("分支"),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _filepathController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                label: Text("文件路径"),
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        child: FilledButton(
-          onPressed: () async {
-            await _saveHandler();
-            if (context.mounted) {
-              Provider.of<UserMusicOrderModel>(context, listen: false)
-                  .load(GithubOriginConst.name);
-              Navigator.of(context).pop();
-            }
+    return Column(
+      children: [
+        TextField(
+          controller: _repoUrlController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            label: Text("仓库地址"),
+          ),
+          onChanged: (e) {
+            _changeHandler();
           },
-          child: const Text("保 存"),
         ),
-      ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _tokenController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            label: Text("Token"),
+          ),
+          onChanged: (e) {
+            _changeHandler();
+          },
+        ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _branchController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            label: Text("分支"),
+          ),
+          onChanged: (e) {
+            _changeHandler();
+          },
+        ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _filepathController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            label: Text("文件路径"),
+          ),
+          onChanged: (e) {
+            _changeHandler();
+          },
+        ),
+      ],
     );
   }
-}
-
-/// 配置信息缓存到本地
-saveConfigData({
-  required String repoUrl,
-  required String token,
-  required String branch,
-  required String filepath,
-}) async {
-  final localStorage = await SharedPreferences.getInstance();
-  localStorage.setString(GithubOriginConst.cacheKeyRepoUrl, repoUrl);
-  localStorage.setString(GithubOriginConst.cacheKeyToken, token);
-  localStorage.setString(GithubOriginConst.cacheKeyBranch, branch);
-  localStorage.setString(GithubOriginConst.cacheKeyFilepath, filepath);
 }

@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/download/model.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/search/search.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bbmusic/modules/user_music_order/local/constants.dart';
 import 'package:bbmusic/modules/user_music_order/local/local.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
@@ -16,13 +16,12 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalDataManage {
   Future<Map<String, dynamic>> getData(BuildContext context) async {
     final player = Provider.of<PlayerModel>(context, listen: false);
     final orderOrigin =
-        Provider.of<UserMusicOrderModel>(context, listen: false);
+        Provider.of<MusicOrderOriginSettingModel>(context, listen: false);
     var data = <String, dynamic>{};
     // 播放列表
     data[CacheKey.playerList] = player.playerList;
@@ -31,17 +30,14 @@ class LocalDataManage {
     // 广场源
     data[CacheKey.openMusicOrderUrls] = await getMusicOrderUrl();
     // 云端歌单源
-    List<dynamic> cloudList = [];
-    for (var item in orderOrigin.dataList) {
-      if (item.service.name != LocalOriginConst.name) {
-        cloudList.add(item.service.getConfig());
-      } else {
-        // 本地歌单
-        data[CacheKey.localMusicOrderList] = await item.service.getList();
-      }
-    }
-    data[CacheKey.cloudMusicOrderSetting] = cloudList;
-
+    data[CacheKey.cloudMusicOrderSetting] = orderOrigin.list
+        .where((t) => t.name != LocalOriginConst.name)
+        .map((l) => l.toJson())
+        .toList();
+    // 本地歌单
+    data[CacheKey.localMusicOrderList] = await orderOrigin.userMusicOrderList
+        .firstWhere((t) => t.id == LocalOriginConst.name)
+        .list;
     return data;
   }
 
@@ -73,7 +69,7 @@ class LocalDataManage {
   import(BuildContext context) async {
     final player = Provider.of<PlayerModel>(context, listen: false);
     final orderOrigin =
-        Provider.of<UserMusicOrderModel>(context, listen: false);
+        Provider.of<MusicOrderOriginSettingModel>(context, listen: false);
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -117,27 +113,23 @@ class LocalDataManage {
       // 云端歌单源
       final cloudList = data[CacheKey.cloudMusicOrderSetting];
       if (cloudList is List && cloudList.isNotEmpty) {
-        for (var item in orderOrigin.dataList) {
-          if (item.service.name != LocalOriginConst.name) {
-            final config = cloudList.singleWhere(
-              (s) => s['name'] == item.service.name,
-            );
-            if (config != null) {
-              await item.service.setConfig(config);
-              orderOrigin.load(item.service.name);
-            }
-          }
+        for (var item in cloudList) {
+          orderOrigin.add(
+            item['name'],
+            item['sub_name'],
+            item['config'],
+          );
         }
       }
       // 本地歌单
       final localList = data[CacheKey.localMusicOrderList];
       if (localList is List && localList.isNotEmpty) {
-        for (var item in orderOrigin.dataList) {
+        for (var item in orderOrigin.userMusicOrderList) {
           if (item.service.name == LocalOriginConst.name) {
             await updateLocalMusicOrderData(
               localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
             );
-            orderOrigin.load(LocalOriginConst.name);
+            orderOrigin.loadSignal(LocalOriginConst.name);
           }
         }
       }

@@ -6,21 +6,17 @@ abstract class UserMusicOrderOrigin {
   String get cname => '';
   IconData? get icon => null;
 
-  /// 将配置信息转为 json
-  /// 必须带有 name
-  Map<String, dynamic> getConfig();
-
-  /// 设置配置信息
-  Future<void> setConfig(Map<String, dynamic> config);
-
   /// 初始化歌单源的配置信息
-  Widget? configBuild();
+  Widget? configBuild({
+    Map<String, dynamic>? value,
+    required Function(Map<String, dynamic>) onChange,
+  });
 
   /// 能否使用此歌单源
   bool canUse();
 
   /// 初始化所需配置
-  Future<void> initConfig();
+  Future<void> initConfig(Map<String, dynamic> config);
 
   /// 获取歌单列表
   Future<List<MusicOrderItem>> getList();

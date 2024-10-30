@@ -1,10 +1,10 @@
 import 'package:bbmusic/modules/music_order/edit_order.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
 
@@ -43,11 +43,11 @@ class UserMusicOrderList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserMusicOrderModel>(
-      builder: (context, umo, child) {
+    return Consumer<MusicOrderOriginSettingModel>(
+      builder: (context, store, child) {
         return ListView(
           children: [
-            ...umo.dataList.map((e) {
+            ...store.userMusicOrderList.map((e) {
               return _MusicOrderListItemView(
                 musicOrder: musicOrder,
                 umo: e,
@@ -121,6 +121,7 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
         return MusicOrderDetail(
           data: item,
           umoService: widget.umo.service,
+          originSettingId: widget.umo.id,
         );
       },
     ));
@@ -147,10 +148,10 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
         onPressed: () {
           widget.umo.service.delete(item).then((value) {
             BotToast.showSimpleNotification(title: "已删除");
-            Provider.of<UserMusicOrderModel>(
+            Provider.of<MusicOrderOriginSettingModel>(
               context,
               listen: false,
-            ).load(widget.umo.service.name);
+            ).loadSignal(widget.umo.id);
           });
         },
       ),
@@ -173,41 +174,42 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
     return _cardBuild([
       const Text('歌单源数据获取失败'),
       const SizedBox(height: 20),
-      TextButton(
-          onPressed: () {
-            final settingWidget = widget.umo.service.configBuild();
-            if (settingWidget != null) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) {
-                    return settingWidget;
-                  },
-                ),
-              );
-            }
-          },
-          child: const Text('重试'))
+      // TextButton(
+      //     onPressed: () {
+      //       // final settingWidget = widget.umo.service.configBuild();
+      //       // if (settingWidget != null) {
+      //       //   Navigator.of(context).push(
+      //       //     MaterialPageRoute(
+      //       //       builder: (context) {
+      //       //         return settingWidget;
+      //       //       },
+      //       //     ),
+      //       //   );
+      //       // }
+      //     },
+      //     child: const Text('重试'))
     ]);
   }
 
   Widget _emptyBuild() {
     return _cardBuild([
-      const Text('歌单源目前无法使用,请先'),
-      const SizedBox(height: 20),
-      TextButton(
-          onPressed: () {
-            final settingWidget = widget.umo.service.configBuild();
-            if (settingWidget != null) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) {
-                    return settingWidget;
-                  },
-                ),
-              );
-            }
-          },
-          child: const Text('完善配置'))
+      const Text('歌单源目前无法使用,请先完善配置'),
+      // const SizedBox(height: 20),
+      // TextButton(
+      //   onPressed: () {
+      //     // final settingWidget = widget.umo.service.configBuild();
+      //     // if (settingWidget != null) {
+      //     //   Navigator.of(context).push(
+      //     //     MaterialPageRoute(
+      //     //       builder: (context) {
+      //     //         return settingWidget;
+      //     //       },
+      //     //     ),
+      //     //   );
+      //     // }
+      //   },
+      //   child: const Text('完善配置'),
+      // )
     ]);
   }
 
@@ -228,17 +230,32 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 点击刷新
-          TextButton(
-            child: Text(
-              widget.umo.service.cname,
-              style: const TextStyle(
-                fontSize: 18,
+          Row(
+            children: [
+              TextButton(
+                child: Text(
+                  widget.umo.service.cname,
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+                onPressed: () {
+                  Provider.of<MusicOrderOriginSettingModel>(
+                    context,
+                    listen: false,
+                  ).loadSignal(widget.umo.id);
+                },
               ),
-            ),
-            onPressed: () {
-              Provider.of<UserMusicOrderModel>(context, listen: false)
-                  .load(widget.umo.service.name);
-            },
+              const SizedBox(width: 10),
+              Text(
+                Provider.of<MusicOrderOriginSettingModel>(
+                      context,
+                      listen: false,
+                    ).id2OriginInfo(widget.umo.id)?.subName ??
+                    "",
+                style: const TextStyle(fontSize: 14),
+              )
+            ],
           ),
           Visibility(
             visible: _canUse,

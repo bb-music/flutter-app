@@ -127,8 +127,7 @@ class _OpenMusicOrderListViewState extends State<OpenMusicOrderListView> {
                     ],
                   ),
                 ),
-                subtitle:
-                    item.desc.isNotEmpty ? Text(item.desc) : const Text('-'),
+                subtitle: item.desc.isNotEmpty ? Text(item.desc) : null,
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) {

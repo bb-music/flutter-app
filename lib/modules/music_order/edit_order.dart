@@ -1,6 +1,6 @@
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/user_music_order/common.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +9,14 @@ import 'package:provider/provider.dart';
 class EditMusicOrder extends StatefulWidget {
   final MusicOrderItem? data;
   final UserMusicOrderOrigin service;
+  String? originSettingId; // 歌单源配置 ID
 
-  const EditMusicOrder({super.key, this.data, required this.service});
+  EditMusicOrder({
+    super.key,
+    this.data,
+    this.originSettingId,
+    required this.service,
+  });
 
   @override
   State<EditMusicOrder> createState() => _EditMusicOrderState();
@@ -95,9 +101,11 @@ class _EditMusicOrderState extends State<EditMusicOrder> {
                       );
                       await widget.service.update(music);
                     }
-                    if (context.mounted) {
-                      Provider.of<UserMusicOrderModel>(context, listen: false)
-                          .load(widget.service.name);
+                    if (context.mounted && widget.originSettingId != null) {
+                      Provider.of<MusicOrderOriginSettingModel>(
+                        context,
+                        listen: false,
+                      ).loadSignal(widget.originSettingId!);
                       Navigator.of(context).pop();
                     }
                   } catch (e) {

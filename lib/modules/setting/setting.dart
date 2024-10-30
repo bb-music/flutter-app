@@ -1,7 +1,6 @@
-import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/modules/setting/local_data.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/list_view.dart';
 import 'package:flutter/material.dart';
-import 'package:bbmusic/modules/user_music_order/user_music_order.dart';
 
 final LocalDataManage localDataManage = LocalDataManage();
 
@@ -17,34 +16,20 @@ class SettingView extends StatelessWidget {
       ),
       body: Column(
         children: [
-          const ListTile(
-            minTileHeight: 30,
-            title: Text(
-              "歌单源配置",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
+          ListTile(
+            title: const Text('歌单源设置'),
+            leading: const Icon(Icons.trip_origin_outlined),
+            minTileHeight: 60,
+            onTap: () {
+              navigator.push(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const MusicOrderOriginSetting();
+                  },
+                ),
+              );
+            },
           ),
-          ...userMusicOrderOrigin.map((e) {
-            final configWidget = e.configBuild();
-            if (configWidget == null) return const SizedBox();
-            return ListTile(
-              title: Text('${e.cname} 歌单源设置'),
-              leading: Icon(e.icon),
-              minTileHeight: 60,
-              onTap: () {
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return configWidget;
-                    },
-                  ),
-                );
-              },
-            );
-          }),
           const SizedBox(
             height: 10,
           ),

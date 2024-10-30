@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/open_music_order/model.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bbmusic/utils/update_version.dart';
 import 'package:bbmusic/utils/window_manage.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/modules/home/home.dart';
-import 'package:bbmusic/modules/music_order/model.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/player/service.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -56,8 +56,9 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => PlayerModel()),
-        ChangeNotifierProvider(create: (context) => UserMusicOrderModel()),
         ChangeNotifierProvider(create: (context) => OpenMusicOrderModel()),
+        ChangeNotifierProvider(
+            create: (context) => MusicOrderOriginSettingModel()),
         ChangeNotifierProvider(create: (context) => DownloadModel()),
       ],
       child: MaterialApp(
@@ -71,8 +72,9 @@ void main() async {
             playerHandler: _playerHandler,
             playerService: playerService,
           );
-          // 初始化歌单
-          Provider.of<UserMusicOrderModel>(context, listen: false).init();
+          // 初始化歌单源与歌单
+          Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
+              .init();
           // 消息提示框的默认配置
           BotToast.defaultOption.text.duration = const Duration(seconds: 10);
           BotToast.defaultOption.text.textStyle = TextStyle(
