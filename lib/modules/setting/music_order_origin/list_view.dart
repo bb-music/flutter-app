@@ -160,8 +160,10 @@ class _ConfigViewState extends State<ConfigView> {
           onPressed: () async {
             await _saveHandler();
             if (context.mounted) {
-              final store = Provider.of<MusicOrderOriginSettingModel>(context,
-                  listen: false);
+              final store = Provider.of<MusicOrderOriginSettingModel>(
+                context,
+                listen: false,
+              );
               if (widget.value == null) {
                 store.add(widget.name, _subNameController.text, _config);
               } else {

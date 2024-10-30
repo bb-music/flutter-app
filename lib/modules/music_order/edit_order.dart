@@ -101,11 +101,13 @@ class _EditMusicOrderState extends State<EditMusicOrder> {
                       );
                       await widget.service.update(music);
                     }
-                    if (context.mounted && widget.originSettingId != null) {
-                      Provider.of<MusicOrderOriginSettingModel>(
-                        context,
-                        listen: false,
-                      ).loadSignal(widget.originSettingId!);
+                    if (context.mounted) {
+                      if (widget.originSettingId != null) {
+                        Provider.of<MusicOrderOriginSettingModel>(
+                          context,
+                          listen: false,
+                        ).loadSignal(widget.originSettingId!);
+                      }
                       Navigator.of(context).pop();
                     }
                   } catch (e) {

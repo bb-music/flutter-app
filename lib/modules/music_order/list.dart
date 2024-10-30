@@ -105,6 +105,7 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
       return EditMusicOrder(
         service: widget.umo.service,
         data: data,
+        originSettingId: widget.umo.id,
       );
     }));
   }

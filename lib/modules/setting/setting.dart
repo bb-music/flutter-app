@@ -1,6 +1,7 @@
 import 'package:bbmusic/modules/setting/local_data.dart';
 import 'package:bbmusic/modules/setting/music_order_origin/list_view.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final LocalDataManage localDataManage = LocalDataManage();
 
@@ -57,15 +58,28 @@ class SettingView extends StatelessWidget {
               localDataManage.export(context);
             },
           ),
+          // ListTile(
+          //   title: const Text("清理缓存"),
+          //   leading: const Icon(Icons.cleaning_services),
+          //   onTap: () {},
+          // ),
           ListTile(
-            title: const Text("清理缓存"),
-            leading: const Icon(Icons.cleaning_services),
-            onTap: () {},
+            title: const Text("帮助"),
+            leading: const Icon(Icons.help),
+            onTap: () {
+              launchUrl(
+                Uri.parse("https://juejin.cn/post/7431454931264274469"),
+              );
+            },
           ),
           ListTile(
             title: const Text("关于哔哔音乐"),
             leading: const Icon(Icons.info),
-            onTap: () {},
+            onTap: () {
+              launchUrl(
+                Uri.parse("https://juejin.cn/post/7414129923633905675"),
+              );
+            },
           ),
         ],
       ),
