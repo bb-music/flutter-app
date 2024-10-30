@@ -7,6 +7,7 @@ import 'package:bbmusic/modules/player/const.dart';
 import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,8 +89,8 @@ class BBPlayer {
 
   // 播放
   Future<void> play({MusicItem? music}) async {
-    print('PLAY: $music');
-    print('current: $current');
+    log('PLAY: $music');
+    log('current: $current');
     if (music != null) {
       // 判断播放列表是否已存在
       if (playerList.where((e) => e.id == music.id).isEmpty) {
@@ -101,7 +102,7 @@ class BBPlayer {
         current = music;
         // notifyListeners();
         _updateLocalStorage();
-        print("播放新歌曲");
+        log("播放新歌曲");
         await audio.seek(Duration.zero);
         await _play(music: music);
         _addPlayerHistory();
@@ -109,11 +110,11 @@ class BBPlayer {
         // 和 current 相等
         if (isPlaying) {
           // 播放中暂停
-          print("播放中暂停");
+          log("播放中暂停");
           await audio.pause();
         } else {
           // 暂停中恢复播放
-          print("暂停中恢复播放");
+          log("暂停中恢复播放");
           await _play();
         }
       }
@@ -121,11 +122,11 @@ class BBPlayer {
       if (current != null) {
         if (isPlaying) {
           // 播放中暂停
-          print("播放中暂停");
+          log("播放中暂停");
           await audio.pause();
         } else {
           // 停止中恢复播放
-          print("停止中恢复播放");
+          log("停止中恢复播放");
           await _play();
         }
       } else {
@@ -190,7 +191,7 @@ class BBPlayer {
 
   // 结束播放
   Future<void> endNext() async {
-    print("播放结束");
+    log("播放结束");
     if (current == null) return;
 
     signalLoop() async {
@@ -461,5 +462,12 @@ class AutoCloseMusic {
     if (autoCloseTimer != null) {
       autoCloseTimer!.cancel();
     }
+  }
+}
+
+log(String value) {
+  // 判断是否是生产环境
+  if (!kReleaseMode) {
+    print(value);
   }
 }

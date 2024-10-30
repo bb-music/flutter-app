@@ -219,7 +219,6 @@ class BiliClient implements OriginService {
       // 排序，取带宽最大的音质最高
       audioList.sort((a, b) => b['bandwidth'].compareTo(a['bandwidth']));
       String url = audioList[0]['baseUrl'];
-      print(audioList);
       return MusicUrl(
         url: url,
         headers: {'Referer': _referer},

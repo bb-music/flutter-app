@@ -58,20 +58,6 @@ updateAppVersion() async {
   }
 }
 
-Future<void> checkForUpdate(String serverVersion) async {
-  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  String currentVersion = packageInfo.version;
-
-  // 比较版本号
-  if (currentVersion != serverVersion) {
-    // 版本需要更新
-    print('需要更新应用到版本 $serverVersion');
-  } else {
-    // 已经是最新版本
-    print('已是最新版本 $currentVersion');
-  }
-}
-
 bool isUpdateVersion(String newVersion, String old) {
   if (newVersion == null || newVersion.isEmpty || old == null || old.isEmpty) {
     return false;

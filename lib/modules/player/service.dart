@@ -36,7 +36,6 @@ class AudioPlayerHandler extends BaseAudioHandler {
   }
   @override
   Future<void> play({MusicItem? music}) async {
-    print('播放');
     _playing = true;
     await player.play(music: music);
     _updateMediaItem();
@@ -46,7 +45,6 @@ class AudioPlayerHandler extends BaseAudioHandler {
 
   @override
   Future<void> pause() async {
-    print('暂停');
     _playing = false;
     await player.pause();
     _updatePosition();
@@ -58,7 +56,6 @@ class AudioPlayerHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToPrevious() async {
-    print('上一首');
     await player.prev();
     _updateMediaItem();
     _broadcastState();
@@ -66,7 +63,6 @@ class AudioPlayerHandler extends BaseAudioHandler {
 
   @override
   Future<void> skipToNext() async {
-    print('下一首');
     await player.next();
     _updateMediaItem();
     _broadcastState();

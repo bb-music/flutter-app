@@ -31,7 +31,6 @@ class LocalDataManage {
     // 广场源
     data[CacheKey.openMusicOrderUrls] = await getMusicOrderUrl();
     // 云端歌单源
-    print(orderOrigin.dataList);
     List<dynamic> cloudList = [];
     for (var item in orderOrigin.dataList) {
       if (item.service.name != LocalOriginConst.name) {
