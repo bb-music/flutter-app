@@ -227,11 +227,18 @@ class _MusicOrderListItemViewState extends State<_MusicOrderListItemView> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            widget.umo.service.cname,
-            style: const TextStyle(
-              fontSize: 18,
+          // 点击刷新
+          TextButton(
+            child: Text(
+              widget.umo.service.cname,
+              style: const TextStyle(
+                fontSize: 18,
+              ),
             ),
+            onPressed: () {
+              Provider.of<UserMusicOrderModel>(context, listen: false)
+                  .load(widget.umo.service.name);
+            },
           ),
           Visibility(
             visible: _canUse,

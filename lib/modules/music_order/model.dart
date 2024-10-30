@@ -19,8 +19,6 @@ class UserMusicOrderModel extends ChangeNotifier {
     );
   }
 
-  getList() async {}
-
   // 重载单个源的列表
   load(String originName) async {
     final index = dataList.indexWhere((d) => d.service.name == originName);
