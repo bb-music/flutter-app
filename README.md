@@ -19,7 +19,7 @@ https://github.com/bb-music/flutter-app/releases/latest
   - [x] 播放列表
   - [x] 单曲循环,列表循环,随机播放
   - [x] 进度拖动
-  - [ ] 计时播放
+  - [x] 计时播放
 - [x] 搜索
   - [x] 名称关键字搜索
 - [x] 歌单
