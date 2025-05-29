@@ -22,7 +22,7 @@ class MusicListTile extends StatelessWidget {
           (player.current != null && player.current!.id == music.id);
       final playingIcon = isPlaying
           ? Icon(
-              player.isPlaying ? Icons.play_arrow : Icons.pause,
+              player.isPlaying ? Icons.pause : Icons.play_arrow,
               size: 18,
               color: Theme.of(context).primaryColor,
             )

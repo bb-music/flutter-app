@@ -231,7 +231,7 @@ autoClose(BuildContext context) {
         child: Container(
           color: Theme.of(context).cardTheme.color,
           padding: const EdgeInsets.all(10),
-          height: 180,
+          height: 200,
           width: double.infinity,
           child: Column(
             children: [
@@ -240,7 +240,12 @@ autoClose(BuildContext context) {
                 runSpacing: 18,
                 children: AutoCloseList.map((item) {
                   return OutlinedButton(
-                    child: Text(item.label),
+                    child: SizedBox(
+                      width: 60,
+                      child: Center(
+                        child: Text(item.label),
+                      ),
+                    ),
                     onPressed: () {
                       Navigator.of(context).pop();
                       BotToast.showText(text: "${item.label}后自动关闭");
