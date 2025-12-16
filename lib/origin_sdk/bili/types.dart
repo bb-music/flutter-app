@@ -23,6 +23,14 @@ class SignData {
   }
 }
 
+/// Bilibili 网站 Cookie 中的 b_nut 字段
+class BiliBNut {
+  final String bNut;
+  final String b3;
+
+  const BiliBNut({required this.bNut, required this.b3});
+}
+
 /// 签名秘钥
 class SpiData {
   final String b3;
