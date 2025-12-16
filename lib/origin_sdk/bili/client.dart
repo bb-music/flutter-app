@@ -41,12 +41,30 @@ class BiliClient implements OriginService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          var cookie = "";
-          cookie += " buvid4=${spiData?.b4};";
-          cookie += " buvid3=${spiData?.b3};";
-          cookie += " bili_ticket=$ticket;";
-          cookie += " b_nut=$bNut;";
-          options.headers["cookie"] = cookie;
+          final cookies = [
+            // "buvid4=${spiData?.b4};",
+            // "buvid3=${spiData?.b3};",
+          ];
+          if (options.uri.path.startsWith("/x/player/wbi/playurl")) {
+            // cookies.add("bili_ticket=$ticket;");
+          } else {
+            cookies.add("buvid4=${spiData?.b4};");
+            cookies.add("buvid3=${spiData?.b3};");
+            cookies.add("bili_ticket=$ticket;");
+            cookies.add("b_nut=$bNut;");
+            final cookie = cookies.join(" ");
+            logs.i('Cookie: ', error: {"Cookie": cookie});
+            options.headers["cookie"] = cookie;
+          }
+          // cookies.add("buvid4=${spiData?.b4};");
+          // cookies.add("buvid3=${spiData?.b3};");
+          // cookies.add("bili_ticket=$ticket;");
+          // cookies.add("b_nut=$bNut;");
+          logs.i('OnRequest:', error: {
+            "path": options.uri.path,
+            "url": options.uri.toString(),
+            "Cookie": options.headers["cookie"],
+          });
           return handler.next(options);
         },
         onError: (DioException error, ErrorInterceptorHandler handler) {
@@ -54,6 +72,7 @@ class BiliClient implements OriginService {
           return handler.next(error);
         },
         onResponse: (Response response, ResponseInterceptorHandler handler) {
+          // return handler.next(response);
           final logData = {
             "requestOptions": response.requestOptions,
             "url": response.realUri.toString(),
@@ -62,7 +81,7 @@ class BiliClient implements OriginService {
             "message": response.data['message'],
             "data": response.data['data'],
           };
-          logs.i("bili: OnResponse: $response", error: logData);
+          logs.i("bili: OnResponse", error: logData);
           if (response.realUri.toString().contains('x/web-interface/nav')) {
             return handler.next(response);
           }
@@ -139,7 +158,7 @@ class BiliClient implements OriginService {
             ticketCache != null &&
             ticketCache.isNotEmpty) {
           signData = SignData(imgKey: signImgKey, subKey: signSubKey);
-          spiData = SpiData(b3: spiB3, b4: spiB4);
+          spiData = SpiData(b3: bNutItem?.b3 ?? spiB3, b4: spiB4);
           ticket = ticketCache;
           return;
         }
@@ -154,6 +173,9 @@ class BiliClient implements OriginService {
       signData = results[0] as SignData;
       spiData = results[1] as SpiData;
       ticket = results[2] as String;
+      if (bNutItem?.b3.isNotEmpty == true && spiData!.b3.isNotEmpty) {
+        spiData = SpiData(b3: bNutItem!.b3, b4: spiData!.b4);
+      }
 
       localStorage.setString(_cache_version_key, _cache_version_value);
 
@@ -207,7 +229,7 @@ class BiliClient implements OriginService {
   Future<BiliBNut?> getBNut() async {
     if (_bNutCache != null &&
         _bNutCacheTime != null &&
-        DateTime.now().difference(_bNutCacheTime!).inSeconds < 30) {
+        DateTime.now().difference(_bNutCacheTime!).inSeconds < 1) {
       return _bNutCache;
     }
     final response = await Dio().get("https://www.bilibili.com/");
@@ -320,10 +342,7 @@ class BiliClient implements OriginService {
       'fnval': '16',
     });
     final uri = Uri.parse(apiPath).replace(queryParameters: query).toString();
-    final response = await dio.get(uri,
-        options: Options(
-          headers: {},
-        ));
+    final response = await dio.get(uri);
     final data = response.data['data'];
     List<dynamic> audioList = data['dash']?['audio']?.toList() ?? [];
     if (audioList.isEmpty) {

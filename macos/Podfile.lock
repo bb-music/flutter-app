@@ -1,10 +1,12 @@
 PODS:
-  - audio_service (0.14.1):
+  - audio_service (0.0.1):
+    - Flutter
     - FlutterMacOS
   - audio_session (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - just_audio (0.0.1):
+    - Flutter
     - FlutterMacOS
   - media_kit_native_event_loop (1.0.0):
     - FlutterMacOS
@@ -27,10 +29,10 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
-  - audio_service (from `Flutter/ephemeral/.symlinks/plugins/audio_service/macos`)
+  - audio_service (from `Flutter/ephemeral/.symlinks/plugins/audio_service/darwin`)
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/macos`)
+  - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/darwin`)
   - media_kit_native_event_loop (from `Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
@@ -42,13 +44,13 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   audio_service:
-    :path: Flutter/ephemeral/.symlinks/plugins/audio_service/macos
+    :path: Flutter/ephemeral/.symlinks/plugins/audio_service/darwin
   audio_session:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
   just_audio:
-    :path: Flutter/ephemeral/.symlinks/plugins/just_audio/macos
+    :path: Flutter/ephemeral/.symlinks/plugins/just_audio/darwin
   media_kit_native_event_loop:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos
   package_info_plus:
@@ -67,19 +69,19 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
 SPEC CHECKSUMS:
-  audio_service: b88ff778e0e3915efd4cd1a5ad6f0beef0c950a9
-  audio_session: dea1f41890dbf1718f04a56f1d6150fd50039b72
+  audio_service: aa99a6ba2ae7565996015322b0bb024e1d25c6fd
+  audio_session: eaca2512cf2b39212d724f35d11f46180ad3a33e
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  just_audio: 9b67ca7b97c61cfc9784ea23cd8cc55eb226d489
-  media_kit_native_event_loop: d20622d35dd6d06fe71223976bd70a2bcf595dce
-  package_info_plus: fa739dd842b393193c5ca93c26798dff6e3d0e0c
-  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
-  screen_retriever: 59634572a57080243dd1bf715e55b6c54f241a38
-  shared_preferences_foundation: b4c3b4cddf1c21f02770737f147a3f5da9d39695
-  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
-  url_launcher_macos: c82c93949963e55b228a30115bd219499a6fe404
-  window_manager: 3a1844359a6295ab1e47659b1a777e36773cd6e8
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
+  media_kit_native_event_loop: 9a930fc84abbb3753b6b404e4c75851b46aa2eaa
+  package_info_plus: a8a591e70e87ce97ce5d21b2594f69cea9e0312f
+  path_provider_foundation: 608fcb11be570ce83519b076ab6a1fffe2474f05
+  screen_retriever: 4f97c103641aab8ce183fa5af3b87029df167936
+  shared_preferences_foundation: 0b09b969fb36da5551c0bc4a2dbd9d0ff9387478
+  sqflite: c35dad70033b8862124f8337cc994a809fcd9fa3
+  url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
+  window_manager: 1d01fa7ac65a6e6f83b965471b1a7fdd3f06166c
 
 PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

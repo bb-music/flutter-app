@@ -14,7 +14,7 @@ final audioCacheManage = CacheManager(Config("bbmusicMediaCache"));
 
 class BBMusicSource extends StreamAudioSource {
   final List<int> _bytes = [];
-  int _sourceLength = 0;
+  int? _sourceLength;
   String _contentType = 'video/mp4';
   final MusicItem music;
   bool _isInit = false;
@@ -78,7 +78,7 @@ class BBMusicSource extends StreamAudioSource {
       var resp = await getMusicStream(music, (List<int> data) {
         _bytes.addAll(data);
       });
-      _sourceLength = resp.contentLength ?? 0;
+      _sourceLength = resp.contentLength;
       _contentType = resp.headers['content-type'] ?? 'video/mp4';
       _isInit = true;
     } catch (e) {
@@ -135,6 +135,7 @@ class BBMusicSource extends StreamAudioSource {
       offset: start,
       stream: Stream.value(_bytes.sublist(start, end)),
       contentType: _contentType,
+      rangeRequestsSupported: true,
     );
   }
 }
