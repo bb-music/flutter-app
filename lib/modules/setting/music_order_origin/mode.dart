@@ -16,12 +16,17 @@ const uuid = Uuid();
 class MusicOrderOriginSettingModel extends ChangeNotifier {
   List<OriginSettingItem> list = [];
   Timer? _timer;
+  bool isInit = false;
 
   List<UserMusicOrderOriginItem> userMusicOrderList = [];
 
   init() async {
+    if (isInit) {
+      return;
+    }
     await load();
     await initUserMusicOrderList();
+    isInit = true;
   }
 
   // 加载源配置列表

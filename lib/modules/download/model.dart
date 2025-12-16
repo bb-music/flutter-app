@@ -28,7 +28,7 @@ class DownloadModel extends ChangeNotifier {
   // 下载
   void download(List<MusicItem> musics) async {
     for (var item in musics) {
-      final name = '${item.name}.mp3';
+      final name = '${item.name.replaceAll("/", "_")}.mp3';
       String resultPath = "";
       try {
         if (Platform.isAndroid) {

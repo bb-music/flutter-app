@@ -9,7 +9,7 @@ initWindowManage() async {
   WindowOptions windowOptions = const WindowOptions(
     size: Size(460, 900),
     minimumSize: Size(400, 700),
-    center: true,
+    // center: true,
     title: "哔哔音乐",
     titleBarStyle: TitleBarStyle.normal,
   );

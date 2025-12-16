@@ -53,13 +53,9 @@ class _DownloadListViewState extends State<DownloadListView>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                Container(
-                  child: Text('下载中'),
-                ),
-                Container(
-                  child: Text('已下载'),
-                ),
+              children: const [
+                Text('下载中'),
+                Text('已下载'),
               ],
             ),
           ),

@@ -17,11 +17,10 @@ const _cacheCreatedAtKey = "bili_catch_created_at";
 const _signImgKey = "bili_sign_img_key";
 const _signSubKey = "bili_sign_sub_key";
 const _ticketKey = "bili_ticket";
-const _bNutKey = "bili_b_nut";
 const _spiB3 = "bili_spi_b3";
 const _spiB4 = "bili_spi_b4";
 const _cache_version_key = 'bili_cache_version';
-const _cache_version_value = '1';
+const _cache_version_value = '4';
 
 class BiliClient implements OriginService {
   final dio = Dio();
@@ -31,6 +30,10 @@ class BiliClient implements OriginService {
   String? ticket;
   String? bNut;
 
+  // bNut 缓存
+  BiliBNut? _bNutCache;
+  DateTime? _bNutCacheTime;
+
   BiliClient() {
     dio.options.headers["UserAgent"] = _userAgent;
     dio.options.headers["Referer"] = _referer;
@@ -38,19 +41,73 @@ class BiliClient implements OriginService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          if (spiData?.b4 != null && spiData?.b3 != null) {
-            var cookie = "";
-            cookie += " buvid4=${spiData!.b4};";
-            cookie += " buvid3=${spiData!.b3};";
-            cookie += " bili_ticket=$ticket;";
-            cookie += " b_nut=$bNut;";
-            options.headers["cookie"] = cookie;
-          }
+          var cookie = "";
+          cookie += " buvid4=${spiData?.b4};";
+          cookie += " buvid3=${spiData?.b3};";
+          cookie += " bili_ticket=$ticket;";
+          cookie += " b_nut=$bNut;";
+          options.headers["cookie"] = cookie;
           return handler.next(options);
         },
         onError: (DioException error, ErrorInterceptorHandler handler) {
-          BotToast.showText(text: '请求失败: $error');
+          // BotToast.showText(text: '请求失败: $error');
           return handler.next(error);
+        },
+        onResponse: (Response response, ResponseInterceptorHandler handler) {
+          final logData = {
+            "requestOptions": response.requestOptions,
+            "url": response.realUri.toString(),
+            "statusCode": response.statusCode,
+            "code": response.data['code'],
+            "message": response.data['message'],
+            "data": response.data['data'],
+          };
+          logs.i("bili: OnResponse: $response", error: logData);
+          if (response.realUri.toString().contains('x/web-interface/nav')) {
+            return handler.next(response);
+          }
+          if (response.statusCode! < 200 || response.statusCode! > 300) {
+            BotToast.showText(
+                text:
+                    '请求失败: ${response.statusCode} ${response.statusMessage} ${response.data}');
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              error: logData,
+              type: DioExceptionType.badResponse,
+            );
+          }
+          final code = response.data['code'];
+          final message = response.data['message'];
+          final resData = response.data['data'];
+
+          if (code != 0) {
+            BotToast.showText(text: '请求失败: $message');
+            logs.e(
+              'bili: 请求失败',
+              error: logData,
+            );
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              error: logData,
+              type: DioExceptionType.badResponse,
+            );
+          }
+          if (resData['v_voucher'] != null) {
+            BotToast.showText(text: '请求失败, 触发风控');
+            logs.e(
+              'bili: 请求失败, 触发风控',
+              error: logData,
+            );
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              error: logData,
+              type: DioExceptionType.badResponse,
+            );
+          }
+          return handler.next(response);
         },
       ),
     );
@@ -60,6 +117,9 @@ class BiliClient implements OriginService {
     final localStorage = await SharedPreferences.getInstance();
     final createAt = localStorage.getInt(_cacheCreatedAtKey);
     final cacheVersion = localStorage.getString(_cache_version_key);
+    final bNutItem = await getBNut();
+    bNut = bNutItem?.bNut;
+
     if (createAt != null && cacheVersion == _cache_version_value) {
       // 判断是否过期
       final isExpired = DateTime.now()
@@ -72,53 +132,48 @@ class BiliClient implements OriginService {
         final spiB3 = localStorage.getString(_spiB3);
         final spiB4 = localStorage.getString(_spiB4);
         final ticketCache = localStorage.getString(_ticketKey);
-        final bNutCache = localStorage.getString(_bNutKey);
         if (signSubKey != null &&
             signImgKey != null &&
             spiB3 != null &&
             spiB4 != null &&
             ticketCache != null &&
-            ticketCache.isNotEmpty &&
-            bNutCache != null &&
-            bNutCache.isNotEmpty) {
+            ticketCache.isNotEmpty) {
           signData = SignData(imgKey: signImgKey, subKey: signSubKey);
           spiData = SpiData(b3: spiB3, b4: spiB4);
           ticket = ticketCache;
-          bNut = bNutCache;
           return;
         }
       }
     }
-    final results = await Future.wait([
-      getSignData(),
-      getSpiData(),
-      getBiliTicket(null),
-    ]);
+    try {
+      final results = await Future.wait([
+        getSignData(),
+        getSpiData(),
+        getBiliTicket(""),
+      ]);
+      signData = results[0] as SignData;
+      spiData = results[1] as SpiData;
+      ticket = results[2] as String;
 
-    signData = results[0] as SignData;
-    spiData = results[1] as SpiData;
-    ticket = results[2] as String;
-    final bNutItem = await getBNut(spiData!);
+      localStorage.setString(_cache_version_key, _cache_version_value);
 
-    localStorage.setString(_cache_version_key, _cache_version_value);
-
-    localStorage.setInt(
-      _cacheCreatedAtKey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
-    if (bNutItem != null) {
-      localStorage.setString(_bNutKey, bNutItem.bNut);
-    }
-    if (ticket != null || ticket!.isNotEmpty) {
-      localStorage.setString(_ticketKey, ticket!);
-    }
-    if (signData != null) {
-      localStorage.setString(_signImgKey, signData!.imgKey);
-      localStorage.setString(_signSubKey, signData!.subKey);
-    }
-    if (spiData != null) {
-      localStorage.setString(_spiB3, bNutItem!.b3);
-      localStorage.setString(_spiB4, spiData!.b4);
+      localStorage.setInt(
+        _cacheCreatedAtKey,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      if (ticket != null || ticket!.isNotEmpty) {
+        localStorage.setString(_ticketKey, ticket!);
+      }
+      if (signData != null) {
+        localStorage.setString(_signImgKey, signData!.imgKey);
+        localStorage.setString(_signSubKey, signData!.subKey);
+      }
+      if (spiData != null) {
+        localStorage.setString(_spiB3, spiData!.b3);
+        localStorage.setString(_spiB4, spiData!.b4);
+      }
+    } catch (e) {
+      logs.e("bili: 认证初始化失败", error: e);
     }
   }
 
@@ -149,7 +204,12 @@ class BiliClient implements OriginService {
   }
 
   // 获取 b_nut
-  Future<BiliBNut?> getBNut(SpiData spiData) async {
+  Future<BiliBNut?> getBNut() async {
+    if (_bNutCache != null &&
+        _bNutCacheTime != null &&
+        DateTime.now().difference(_bNutCacheTime!).inSeconds < 30) {
+      return _bNutCache;
+    }
     final response = await Dio().get("https://www.bilibili.com/");
     if (response.statusCode == 200) {
       // 获取响应头中的 Set-Cookie 字段中 的 b_nut
@@ -160,7 +220,10 @@ class BiliClient implements OriginService {
       final bNutItem =
           setCookie?.firstWhere((element) => element.startsWith("b_nut"));
       final nNut = bNutItem?.split(";")[0].split("=")[1] ?? "";
-      return BiliBNut(bNut: nNut, b3: b3);
+
+      _bNutCache = BiliBNut(bNut: nNut, b3: b3);
+      _bNutCacheTime = DateTime.now();
+      return _bNutCache;
     }
     return null;
   }
@@ -177,16 +240,16 @@ class BiliClient implements OriginService {
       'pagesize': '20',
     });
     final apiPath = Uri.parse(url).replace(queryParameters: query).toString();
-    final response = await dio.get(apiPath);
-
-    if (response.statusCode == 200) {
+    try {
+      final response = await dio.get(apiPath);
       return BiliSearchResponse.fromJson(response.data);
-    } else {
-      logs.e(
-        "bili: 搜索失败",
-        error: {"body": response.data, 'params': params},
+    } catch (e) {
+      return BiliSearchResponse(
+        current: 0,
+        total: 0,
+        pageSize: 0,
+        data: [],
       );
-      throw response.data;
     }
   }
 
@@ -203,17 +266,8 @@ class BiliClient implements OriginService {
     final response = await dio.get(
       Uri.parse(url).replace(queryParameters: query).toString(),
     );
-
-    if (response.statusCode == 200) {
-      final data = response.data['data'];
-      return BiliSearchItem.fromJson(data);
-    } else {
-      logs.e(
-        "bili: 搜索条目详情获取失败",
-        error: {"body": response.data, 'id': id},
-      );
-      throw response.data;
-    }
+    final data = response.data['data'];
+    return BiliSearchItem.fromJson(data);
   }
 
   // 搜索建议
@@ -257,7 +311,7 @@ class BiliClient implements OriginService {
       throw Exception('歌曲 ID 不正确 缺少 CID');
     }
     await init();
-    const url = 'https://api.bilibili.com/x/player/wbi/playurl';
+    const apiPath = 'https://api.bilibili.com/x/player/wbi/playurl';
     // const url = 'https://api.bilibili.com/x/player/playurl';
     Map<String, String> query = _signParams({
       'avid': biliid.aid,
@@ -265,33 +319,27 @@ class BiliClient implements OriginService {
       'cid': biliid.cid!,
       'fnval': '16',
     });
-    try {
-      final uri = Uri.parse(url).replace(queryParameters: query).toString();
-      final response = await Dio().get(uri,
-          options: Options(
-            headers: {},
-          ));
-      if (response.statusCode == 200) {
-        final data = response.data['data'];
-        List<dynamic> audioList = data['dash']['audio'].toList();
-        // 排序，取带宽最大的音质最高
-        audioList.sort((a, b) => b['bandwidth'].compareTo(a['bandwidth']));
-        String url = audioList[0]['baseUrl'];
-        return MusicUrl(
-          url: url,
-          headers: {'Referer': _referer},
-        );
-      } else {
-        logs.e(
-          "bili: 获取音乐播放地址失败",
-          error: {"body": response, 'id': id},
-        );
-        throw response;
-      }
-    } catch (e) {
-      logs.e("bili: 播放接口出现错误", error: {"body": e, "id": id});
-      throw e;
+    final uri = Uri.parse(apiPath).replace(queryParameters: query).toString();
+    final response = await dio.get(uri,
+        options: Options(
+          headers: {},
+        ));
+    final data = response.data['data'];
+    List<dynamic> audioList = data['dash']?['audio']?.toList() ?? [];
+    if (audioList.isEmpty) {
+      logs.e(
+        "bili: 音频列表为空",
+        error: {"body": response.data, 'id': id},
+      );
+      throw response.data;
     }
+    // 排序，取带宽最大的音质最高
+    audioList.sort((a, b) => b['bandwidth'].compareTo(a['bandwidth']));
+    String murl = audioList[0]['baseUrl'];
+    return MusicUrl(
+      url: murl,
+      headers: {'Referer': _referer},
+    );
   }
 
   // 对参数进行签名

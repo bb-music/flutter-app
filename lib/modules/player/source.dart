@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
+import 'package:bbmusic/utils/logs.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart';
 import 'package:just_audio/just_audio.dart';
@@ -72,12 +74,18 @@ class BBMusicSource extends StreamAudioSource {
 
   _init() async {
     if (_isInit) return;
-    var resp = await getMusicStream(music, (List<int> data) {
-      _bytes.addAll(data);
-    });
-    _sourceLength = resp.contentLength ?? 0;
-    _contentType = resp.headers['content-type'] ?? 'video/mp4';
-    _isInit = true;
+    try {
+      var resp = await getMusicStream(music, (List<int> data) {
+        _bytes.addAll(data);
+      });
+      _sourceLength = resp.contentLength ?? 0;
+      _contentType = resp.headers['content-type'] ?? 'video/mp4';
+      _isInit = true;
+    } catch (e) {
+      BotToast.showText(text: '加载失败');
+      logs.e("加载失败", error: e);
+      throw e;
+    }
   }
 
   Future<StreamAudioResponse?> _getCacheFile(int? start, int? end) async {
