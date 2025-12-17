@@ -37,7 +37,7 @@ jobs:
         with:
           flutter-version: 3.38.5
           channel: stable
-          cache: true
+          cache: false
       - run: flutter build apk --split-per-abi
       - run: flutter build apk
 
