@@ -59,7 +59,7 @@ updateAppVersion() async {
 }
 
 bool isUpdateVersion(String newVersion, String old) {
-  if (newVersion == null || newVersion.isEmpty || old == null || old.isEmpty) {
+  if (newVersion.isEmpty || old.isEmpty) {
     return false;
   }
   int newVersionInt, oldVersion;

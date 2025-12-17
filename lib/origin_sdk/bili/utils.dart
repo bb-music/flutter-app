@@ -18,7 +18,7 @@ class BiliId {
   }
 
   String decode() {
-    String id = '${aid}_${bvid}';
+    String id = '${aid}_$bvid';
     if (cid != null && cid!.isNotEmpty) {
       id += '_$cid';
     }

@@ -79,7 +79,7 @@ void main() async {
             color: Theme.of(context).cardColor,
           );
           child = botToastBuilder(context, child);
-          Timer(Duration(seconds: 1), () {
+          Timer(const Duration(seconds: 1), () {
             updateAppVersion();
           });
           return child;
