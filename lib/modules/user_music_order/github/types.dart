@@ -72,7 +72,7 @@ class Links {
 List<MusicOrderItem> decodeGithubFileContent(String content) {
   final contentRaw = content.replaceAll('\n', '');
   // base 64 解码
-  String raw = Utf8Decoder().convert(base64Decode(contentRaw));
+  String raw = const Utf8Decoder().convert(base64Decode(contentRaw));
   final data = json.decode(raw.trim().isEmpty ? '[]' : raw);
   List<MusicOrderItem> list = [];
   for (var item in data) {

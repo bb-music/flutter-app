@@ -73,7 +73,6 @@ class _MusicOrderListItemView extends StatefulWidget {
   final OnItemHandler? onItemTap;
 
   const _MusicOrderListItemView({
-    super.key,
     this.collectModalStyle,
     this.onItemTap,
     this.musicOrder,

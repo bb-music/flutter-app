@@ -106,7 +106,7 @@ class HomeView extends StatelessWidget {
               future: buildAppVersion(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
                 } else {
@@ -127,7 +127,6 @@ class _ItemCard extends StatelessWidget {
   final Function? onTap;
 
   const _ItemCard({
-    super.key,
     this.onTap,
     required this.title,
     required this.icon,

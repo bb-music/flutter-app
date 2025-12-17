@@ -49,7 +49,7 @@ class BBMusicSource extends StreamAudioSource {
           }
         }, onDone: () async {
           // 缓冲完成将歌曲添加到缓存
-          var bytes = Uint8List.fromList(this._bytes);
+          var bytes = Uint8List.fromList(_bytes);
           var ext = musicUrl.url.split('?').first.split('.').last;
           await audioCacheManage.putFile(
             musicUrl.url,
@@ -84,7 +84,7 @@ class BBMusicSource extends StreamAudioSource {
     } catch (e) {
       BotToast.showText(text: '加载失败');
       logs.e("加载失败", error: e);
-      throw e;
+      rethrow;
     }
   }
 

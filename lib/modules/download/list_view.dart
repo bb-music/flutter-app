@@ -1,6 +1,5 @@
 import 'package:bbmusic/modules/download/config_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class DownloadListView extends StatefulWidget {
   const DownloadListView({super.key});

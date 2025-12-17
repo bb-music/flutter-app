@@ -330,7 +330,6 @@ class _SearchForm extends StatefulWidget {
   final FocusNode focusNode;
 
   const _SearchForm({
-    super.key,
     required this.keywordController,
     required this.onSearch,
     required this.onInput,

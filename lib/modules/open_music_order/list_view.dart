@@ -150,6 +150,6 @@ class _OpenMusicOrderListViewState extends State<OpenMusicOrderListView> {
 class OrderListGroup {
   const OrderListGroup();
   factory OrderListGroup.fromJson(Map<String, dynamic> json) {
-    return OrderListGroup();
+    return const OrderListGroup();
   }
 }
