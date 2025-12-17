@@ -314,7 +314,7 @@ class BBPlayer {
 
   Future<void> _play({MusicItem? music, bool isPlay = true}) async {
     if (music != null) {
-      await audio.setAudioSource(BBMusicSource(music));
+      await audio.setAudioSources([BBMusicSource(music)]);
     }
     if (isPlay) {
       await audio.play();
