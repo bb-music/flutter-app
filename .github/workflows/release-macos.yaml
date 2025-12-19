@@ -4,12 +4,11 @@ on:
   push:
     tags:
       - 'v*'
-  # workflow_dispatch:
-  #   inputs:
-  #     tag:
-  #       description: 'Version tag'
-  #       required: true
-  #       default: '0.0.1'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag'
+        required: true
 
 jobs:
   main:
@@ -45,6 +44,15 @@ jobs:
             --app-drop-link 200 70  \
             build/bbmusic.dmg  \
             build/macos/Build/Products/Release/bbmusic.app
+
+      - name: 确定 Release Tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
       - name: 推送到 release
         uses: softprops/action-gh-release@v1
         env:
@@ -52,3 +60,4 @@ jobs:
         with:
           files: ./build/bbmusic.dmg
           token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE_TAG }}
