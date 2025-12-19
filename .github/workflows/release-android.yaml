@@ -35,7 +35,7 @@ jobs:
       - name: 安装 Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.22.2
+          flutter-version: 3.27.1
           channel: stable
           cache: true
       - run: flutter build apk --split-per-abi
