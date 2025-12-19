@@ -72,9 +72,6 @@ void main() async {
             playerHandler: _playerHandler,
             playerService: playerService,
           );
-          // 初始化歌单源与歌单
-          Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
-              .init();
           // 消息提示框的默认配置
           BotToast.defaultOption.text.duration = const Duration(seconds: 10);
           BotToast.defaultOption.text.textStyle = TextStyle(
@@ -82,7 +79,7 @@ void main() async {
             color: Theme.of(context).cardColor,
           );
           child = botToastBuilder(context, child);
-          Timer(Duration(seconds: 1), () {
+          Timer(const Duration(seconds: 1), () {
             updateAppVersion();
           });
           return child;

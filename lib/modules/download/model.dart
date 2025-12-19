@@ -28,7 +28,7 @@ class DownloadModel extends ChangeNotifier {
   // 下载
   void download(List<MusicItem> musics) async {
     for (var item in musics) {
-      final name = '${item.name}.mp3';
+      final name = '${item.name.replaceAll("/", "_")}.mp3';
       String resultPath = "";
       try {
         if (Platform.isAndroid) {
@@ -101,7 +101,7 @@ Future<String> _downloadForAndroid(
   final key = music2cacheKey(music);
   final cacheFile = await audioCacheManage.getFileFromCache(key);
   // 保存路径
-  String savePath = path.join(dir!.path, name);
+  String savePath = path.join(dir.path, name);
   if (cacheFile?.file != null) {
     // 文件保存
     cacheFile!.file.copy(savePath);

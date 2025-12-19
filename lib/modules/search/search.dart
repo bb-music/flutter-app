@@ -170,45 +170,43 @@ class _SearchViewState extends State<SearchView> {
   }
 
   Widget buildSearchHistory() {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.only(left: 10, right: 10),
-        width: double.infinity,
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _searchHistory.map((keyword) {
-            return InkWell(
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
-              onTap: () {
-                _keywordController.text = keyword;
-                _searchHandler(true);
-              },
-              onLongPress: () {
-                openBottomSheet(
-                  context,
-                  [
-                    SheetItem(
-                      title: const Text("删除"),
-                      onPressed: () {
-                        updateSearchHistory(keyword, isDelete: true);
-                      },
-                    ),
-                  ],
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.only(
-                  top: 6,
-                  bottom: 6,
-                  left: 12,
-                  right: 12,
-                ),
-                child: Text(keyword),
+    return Container(
+      padding: const EdgeInsets.only(left: 10, right: 10),
+      width: double.infinity,
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: _searchHistory.map((keyword) {
+          return InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            onTap: () {
+              _keywordController.text = keyword;
+              _searchHandler(true);
+            },
+            onLongPress: () {
+              openBottomSheet(
+                context,
+                [
+                  SheetItem(
+                    title: const Text("删除"),
+                    onPressed: () {
+                      updateSearchHistory(keyword, isDelete: true);
+                    },
+                  ),
+                ],
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.only(
+                top: 6,
+                bottom: 6,
+                left: 12,
+                right: 12,
               ),
-            );
-          }).toList(),
-        ),
+              child: Text(keyword),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -332,7 +330,6 @@ class _SearchForm extends StatefulWidget {
   final FocusNode focusNode;
 
   const _SearchForm({
-    super.key,
     required this.keywordController,
     required this.onSearch,
     required this.onInput,

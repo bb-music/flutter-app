@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
+import 'package:bbmusic/utils/logs.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart';
 import 'package:just_audio/just_audio.dart';
@@ -12,7 +14,7 @@ final audioCacheManage = CacheManager(Config("bbmusicMediaCache"));
 
 class BBMusicSource extends StreamAudioSource {
   final List<int> _bytes = [];
-  int _sourceLength = 0;
+  int? _sourceLength;
   String _contentType = 'video/mp4';
   final MusicItem music;
   bool _isInit = false;
@@ -47,7 +49,7 @@ class BBMusicSource extends StreamAudioSource {
           }
         }, onDone: () async {
           // 缓冲完成将歌曲添加到缓存
-          var bytes = Uint8List.fromList(this._bytes);
+          var bytes = Uint8List.fromList(_bytes);
           var ext = musicUrl.url.split('?').first.split('.').last;
           await audioCacheManage.putFile(
             musicUrl.url,
@@ -72,12 +74,18 @@ class BBMusicSource extends StreamAudioSource {
 
   _init() async {
     if (_isInit) return;
-    var resp = await getMusicStream(music, (List<int> data) {
-      _bytes.addAll(data);
-    });
-    _sourceLength = resp.contentLength ?? 0;
-    _contentType = resp.headers['content-type'] ?? 'video/mp4';
-    _isInit = true;
+    try {
+      var resp = await getMusicStream(music, (List<int> data) {
+        _bytes.addAll(data);
+      });
+      _sourceLength = resp.contentLength;
+      _contentType = resp.headers['content-type'] ?? 'video/mp4';
+      _isInit = true;
+    } catch (e) {
+      BotToast.showText(text: '加载失败');
+      logs.e("加载失败", error: e);
+      rethrow;
+    }
   }
 
   Future<StreamAudioResponse?> _getCacheFile(int? start, int? end) async {
@@ -127,6 +135,7 @@ class BBMusicSource extends StreamAudioSource {
       offset: start,
       stream: Stream.value(_bytes.sublist(start, end)),
       contentType: _contentType,
+      rangeRequestsSupported: true,
     );
   }
 }

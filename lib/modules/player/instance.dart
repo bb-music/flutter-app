@@ -7,6 +7,7 @@ import 'package:bbmusic/modules/player/const.dart';
 import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/utils/utils.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,64 +88,86 @@ class BBPlayer {
     _timer?.cancel();
   }
 
+  Future<void> playError(e) async {
+    BotToast.showText(text: "播放歌曲失败：$e");
+    log("播放歌曲失败：$e");
+    // 下一首
+    // 延时 2 s 后再播放下一首
+    await Future.delayed(const Duration(seconds: 2));
+    await next();
+  }
+
   // 播放
   Future<void> play({MusicItem? music}) async {
     log('PLAY: $music');
     log('current: $current');
-    if (music != null) {
-      // 判断播放列表是否已存在
-      if (playerList.where((e) => e.id == music.id).isEmpty) {
-        // 不存在，添加到播放列表
-        addPlayerList([music]);
-      }
 
-      if (current?.id != music.id) {
-        current = music;
-        // notifyListeners();
-        _updateLocalStorage();
-        log("播放新歌曲");
-        await audio.seek(Duration.zero);
-        await _play(music: music);
-        _addPlayerHistory();
-      } else {
-        // 和 current 相等
-        if (isPlaying) {
-          // 播放中暂停
-          log("播放中暂停");
-          await audio.pause();
-        } else {
-          // 暂停中恢复播放
-          log("暂停中恢复播放");
-          await _play();
+    try {
+      if (music != null) {
+        // 判断播放列表是否已存在
+        if (playerList.where((e) => e.id == music.id).isEmpty) {
+          // 不存在，添加到播放列表
+          addPlayerList([music]);
         }
-      }
-    } else {
-      if (current != null) {
-        if (isPlaying) {
-          // 播放中暂停
-          log("播放中暂停");
-          await audio.pause();
-        } else {
-          // 停止中恢复播放
-          log("停止中恢复播放");
-          await _play();
-        }
-      } else {
-        // 没有播放列表
-        if (playerList.isNotEmpty) {
-          // 播放列表不为空
-          current = playerList.first;
+
+        if (current?.id != music.id) {
+          current = music;
           // notifyListeners();
           _updateLocalStorage();
-          if (current != null) {
-            await _play(music: current);
-            _addPlayerHistory();
+          log("播放新歌曲");
+          await audio.seek(Duration.zero);
+          await _play(music: music);
+          _addPlayerHistory();
+        } else {
+          // 和 current 相等
+          if (isPlaying) {
+            // 播放中暂停
+            log("播放中暂停");
+            await audio.pause();
+          } else {
+            // 暂停中恢复播放
+            log("暂停中恢复播放");
+            await _play();
+          }
+        }
+      } else {
+        if (current != null) {
+          if (isPlaying) {
+            // 播放中暂停
+            log("播放中暂停");
+            await audio.pause();
+          } else {
+            // 停止中恢复播放
+            log("停止中恢复播放");
+            await _play();
+          }
+        } else {
+          // 没有播放列表
+          if (playerList.isNotEmpty) {
+            // 播放列表不为空
+            current = playerList.first;
+            // notifyListeners();
+            _updateLocalStorage();
+            if (current != null) {
+              await _play(music: current);
+              _addPlayerHistory();
+            }
           }
         }
       }
+      _updateLocalStorage();
+    } catch (e) {
+      audio.stop();
+      audio.clearAudioSources();
+      final msg = "歌曲 ${music?.name ?? "未知"} 播放失败";
+      BotToast.showText(text: "$msg：$e");
+      log("$msg：$e");
+      // 下一首
+      // 延时 2 s 后再播放下一首
+      await Future.delayed(const Duration(seconds: 2));
+      await next();
     }
     // notifyListeners();
-    _updateLocalStorage();
   }
 
   // 暂停
@@ -170,13 +193,15 @@ class BBPlayer {
   }
 
   // 下一首
-  Future<void> next() async {
+  Future<void> next({bool notSeek = false}) async {
     if (current == null) return;
     if (playerMode != PlayerMode.signalLoop) {
-      await endNext();
+      await endNext(notSeek: notSeek);
     } else {
       int index = playerList.indexWhere((p) => p.id == current!.id);
-      await audio.seek(Duration.zero);
+      if (!notSeek) {
+        await audio.seek(Duration.zero);
+      }
       if (playerList.length == 1) {
         // 只有一个时就是单曲循环
         await play(music: current);
@@ -190,12 +215,14 @@ class BBPlayer {
   }
 
   // 结束播放
-  Future<void> endNext() async {
+  Future<void> endNext({bool notSeek = false}) async {
     log("播放结束");
     if (current == null) return;
 
     signalLoop() async {
-      await audio.seek(Duration.zero);
+      if (!notSeek) {
+        await audio.seek(Duration.zero);
+      }
       await play(music: current);
     }
 
@@ -213,7 +240,9 @@ class BBPlayer {
       List<MusicItem> list =
           playerList.where((p) => !_playerHistory.contains(p.id)).toList();
       int len = list.length;
-      await audio.seek(Duration.zero);
+      if (!notSeek) {
+        await audio.seek(Duration.zero);
+      }
       if (len == 0) {
         _playerHistory.clear();
         int nn = playerList.length;
@@ -233,7 +262,9 @@ class BBPlayer {
     // 列表顺序播放
     if (playerMode == PlayerMode.listOrder) {
       if (index != playerList.length - 1) {
-        await audio.seek(Duration.zero);
+        if (!notSeek) {
+          await audio.seek(Duration.zero);
+        }
         await play(music: playerList[index + 1]);
         if (!audio.playing) {
           audio.play();
@@ -243,7 +274,9 @@ class BBPlayer {
     }
     // 列表循环
     if (playerMode == PlayerMode.listLoop) {
-      await audio.seek(Duration.zero);
+      if (!notSeek) {
+        await audio.seek(Duration.zero);
+      }
       if (playerList.length == 1) {
         // 只有一个时就是单曲循环
         await signalLoop();
@@ -314,7 +347,7 @@ class BBPlayer {
 
   Future<void> _play({MusicItem? music, bool isPlay = true}) async {
     if (music != null) {
-      await audio.setAudioSource(BBMusicSource(music));
+      await audio.setAudioSources([BBMusicSource(music)]);
     }
     if (isPlay) {
       await audio.play();

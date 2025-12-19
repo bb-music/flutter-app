@@ -16,12 +16,17 @@ const uuid = Uuid();
 class MusicOrderOriginSettingModel extends ChangeNotifier {
   List<OriginSettingItem> list = [];
   Timer? _timer;
+  bool isInit = false;
 
   List<UserMusicOrderOriginItem> userMusicOrderList = [];
 
   init() async {
+    if (isInit) {
+      return;
+    }
     await load();
     await initUserMusicOrderList();
+    isInit = true;
   }
 
   // 加载源配置列表
@@ -30,8 +35,8 @@ class MusicOrderOriginSettingModel extends ChangeNotifier {
     final jsonStr = localStorage.getString(CacheKey.cloudMusicOrderSetting);
     list.clear();
     if (jsonStr != null) {
-      List<dynamic> _list = jsonDecode(jsonStr);
-      list.addAll(_list.where((t) => t['name'] != LocalOriginConst.name).map(
+      List<dynamic> list = jsonDecode(jsonStr);
+      list.addAll(list.where((t) => t['name'] != LocalOriginConst.name).map(
         (l) {
           return OriginSettingItem(
             id: l['id'],
@@ -121,7 +126,7 @@ class MusicOrderOriginSettingModel extends ChangeNotifier {
   loadSignal(String id) async {
     final current = userMusicOrderList.firstWhere((d) => d.id == id);
     final info = id2OriginInfo(id);
-    if (current == null || info == null) return;
+    if (info == null) return;
     await _loadItem(current);
   }
 

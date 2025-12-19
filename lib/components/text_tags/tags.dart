@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class TextTags extends StatelessWidget {
   final List<String> tags;
-  const TextTags({Key? key, required this.tags}) : super(key: key);
+  const TextTags({super.key, required this.tags});
 
   @override
   Widget build(BuildContext context) {
