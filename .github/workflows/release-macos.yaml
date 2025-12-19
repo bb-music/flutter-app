@@ -1,0 +1,63 @@
+name: 构建 MacOS 应用
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag'
+        required: true
+
+jobs:
+  main:
+    name: Release MacOS App
+    runs-on: macos-latest
+    steps:
+      - name: 克隆仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.27.1
+          cache: true
+      - run: flutter build macos
+
+      - name: 安装 create-image
+        uses: actions/checkout@v2
+        with:
+          repository: create-dmg/create-dmg
+          path: ./build/create-dmg
+          ref: master
+
+      - name: 打包为 DMG
+        shell: bash
+        run: |
+          ./build/create-dmg/create-dmg \
+            --volname bbmusic \
+            --window-size 400 200  \
+            --icon-size 100  \
+            --icon bbmusic 30 70  \
+            --app-drop-link 200 70  \
+            build/bbmusic.dmg  \
+            build/macos/Build/Products/Release/bbmusic.app
+
+      - name: 确定 Release Tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: 推送到 release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./build/bbmusic.dmg
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE_TAG }}

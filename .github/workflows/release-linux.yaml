@@ -1,0 +1,65 @@
+name: 构建 Linux 应用
+
+on:
+  # push:
+  #   tags:
+  #     - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag'
+        required: true
+
+jobs:
+  main:
+    name: Release Linux App
+    runs-on: ubuntu-latest
+    steps:
+      - name: 克隆仓库
+        uses: actions/checkout@v4
+
+      - name: 对比 Tag 和 pubspec.yaml 的 version, 确保一致
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          tag_version=$(echo "$TAG" | sed 's/^v//')
+          echo "$tag_version"
+
+          pubspec_version=$(echo grep version pubspec.yaml | head -n 1 | cut -d ':' -f 2 | tr -d '[:space:]')
+          echo "$pubspec_version"
+
+          if [ "$tag_version" = "$pubspec_version" ]; then
+            echo "版本号一致"
+          else
+            echo "版本号不一致！请检查!"
+            exit 1
+          fi
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev
+      - run: flutter build linux
+      - name: 压缩打包文件夹
+        run: |
+          tar -zcvf bbmusic-linux.tar.gz ./build/linux/x64/release
+
+      - name: 确定 Release Tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: 推送到 release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./bbmusic-linux.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE_TAG }}

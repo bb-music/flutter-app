@@ -1,0 +1,49 @@
+name: 构建 Windows 应用
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag'
+        required: true
+
+jobs:
+  main:
+    name: Release Windows App
+    runs-on: windows-latest
+    steps:
+      - name: 克隆仓库
+        uses: actions/checkout@v4
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.27.1
+          channel: stable
+          cache: true
+      - run: flutter build windows
+
+      - name: 压缩打包文件夹
+        run: |
+          Compress-Archive -Path ./build/windows/x64/runner/Release -DestinationPath ./bbmusic-windows.zip
+
+      - name: 确定 Release Tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: 推送到 release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./bbmusic-windows.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE_TAG }}
