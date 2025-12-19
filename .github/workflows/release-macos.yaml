@@ -23,6 +23,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.27.1
           cache: true
       - run: flutter build macos
 
@@ -35,9 +36,8 @@ jobs:
 
       - name: 打包为 DMG
         shell: bash
-        working-directory: ./build
         run: |
-          ./create-dmg/create-dmg \
+          ./build/create-dmg/create-dmg \
             --volname bbmusic \
             --window-size 400 200  \
             --icon-size 100  \
@@ -45,7 +45,6 @@ jobs:
             --app-drop-link 200 70  \
             build/bbmusic.dmg  \
             build/macos/Build/Products/Release/bbmusic.app
-
       - name: 推送到 release
         uses: softprops/action-gh-release@v1
         env:
