@@ -40,7 +40,13 @@ jobs:
       - name: 配置 Flutter 使用 Java 21
         run: |
           flutter config --jdk-dir $JAVA_HOME
+          yes | flutter doctor --android-licenses
           flutter doctor -v
+
+      - name: 强制更新 Gradle Wrapper 为 8.5
+        run: |
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-all.zip|' android/gradle/wrapper/gradle-wrapper.properties
+
       - run: flutter build apk --split-per-abi
       - run: flutter build apk
 
