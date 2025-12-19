@@ -77,7 +77,7 @@ android {
         debug {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
         }
     }
 }

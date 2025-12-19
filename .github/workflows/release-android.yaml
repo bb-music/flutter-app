@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: zulu
-          java-version: 17
+          java-version: 21
 
       - name: 将screct变量添加签名文件
         run: |
