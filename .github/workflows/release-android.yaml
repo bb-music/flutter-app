@@ -47,6 +47,10 @@ jobs:
         run: |
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-all.zip|' android/gradle/wrapper/gradle-wrapper.properties
 
+      - name: Disable Jetifier
+        run: |
+          sed -i 's|android.enableJetifier=true|android.enableJetifier=false|' android/gradle.properties
+
       - run: flutter build apk --split-per-abi
       - run: flutter build apk
 
