@@ -35,9 +35,13 @@ class LocalDataManage {
         .map((l) => l.toJson())
         .toList();
     // 本地歌单
-    data[CacheKey.localMusicOrderList] = await orderOrigin.userMusicOrderList
-        .firstWhere((t) => t.id == LocalOriginConst.name)
-        .list;
+    if (orderOrigin.userMusicOrderList.length > 0) {
+      data[CacheKey.localMusicOrderList] = orderOrigin.userMusicOrderList
+          .firstWhere((t) => t.id == LocalOriginConst.name)
+          .list;
+    } else {
+      data[CacheKey.localMusicOrderList] = [];
+    }
     return data;
   }
 
@@ -59,11 +63,29 @@ class LocalDataManage {
     // 写入文件
     String now =
         (DateTime.timestamp().millisecondsSinceEpoch ~/ 1000).toString();
-    final downloadDir = await getDownloadDir();
-    String filePath = path.join(downloadDir!.path, "export_$now.json");
-    File file = File(filePath);
-    file.writeAsString(jsonStr);
-    BotToast.showText(text: '已导出到文件 $filePath');
+
+    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: '导出配置',
+        fileName: 'export_$now.json',
+        allowedExtensions: ['json'],
+        type: FileType.custom,
+      );
+
+      if (outputFile == null) {
+        return;
+      }
+
+      File file = File(outputFile);
+      await file.writeAsString(jsonStr);
+      BotToast.showText(text: '已导出到文件 $outputFile');
+    } else {
+      final downloadDir = await getDownloadDir();
+      String filePath = path.join(downloadDir!.path, "export_$now.json");
+      File file = File(filePath);
+      await file.writeAsString(jsonStr);
+      BotToast.showText(text: '已导出到文件 $filePath');
+    }
   }
 
   import(BuildContext context) async {
