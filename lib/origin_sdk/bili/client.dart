@@ -19,8 +19,8 @@ const _signSubKey = "bili_sign_sub_key";
 const _ticketKey = "bili_ticket";
 const _spiB3 = "bili_spi_b3";
 const _spiB4 = "bili_spi_b4";
-const _cache_version_key = 'bili_cache_version';
-const _cache_version_value = '4';
+const _cacheVersionKey = 'bili_cache_version';
+const _cacheVersionValue = '4';
 
 class BiliClient implements OriginService {
   final dio = Dio();
@@ -135,11 +135,11 @@ class BiliClient implements OriginService {
   init() async {
     final localStorage = await SharedPreferences.getInstance();
     final createAt = localStorage.getInt(_cacheCreatedAtKey);
-    final cacheVersion = localStorage.getString(_cache_version_key);
+    final cacheVersion = localStorage.getString(_cacheVersionKey);
     final bNutItem = await getBNut();
     bNut = bNutItem?.bNut;
 
-    if (createAt != null && cacheVersion == _cache_version_value) {
+    if (createAt != null && cacheVersion == _cacheVersionValue) {
       // 判断是否过期
       final isExpired = DateTime.now()
               .difference(DateTime.fromMillisecondsSinceEpoch(createAt))
@@ -177,7 +177,7 @@ class BiliClient implements OriginService {
         spiData = SpiData(b3: bNutItem!.b3, b4: spiData!.b4);
       }
 
-      localStorage.setString(_cache_version_key, _cache_version_value);
+      localStorage.setString(_cacheVersionKey, _cacheVersionValue);
 
       localStorage.setInt(
         _cacheCreatedAtKey,
