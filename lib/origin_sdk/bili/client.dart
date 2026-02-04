@@ -72,14 +72,11 @@ class BiliClient implements OriginService {
           return handler.next(error);
         },
         onResponse: (Response response, ResponseInterceptorHandler handler) {
-          // return handler.next(response);
           final logData = {
             "requestOptions": response.requestOptions,
             "url": response.realUri.toString(),
+            "data": response.data,
             "statusCode": response.statusCode,
-            "code": response.data['code'],
-            "message": response.data['message'],
-            "data": response.data['data'],
           };
           logs.i("bili: OnResponse", error: logData);
           if (response.realUri.toString().contains('x/web-interface/nav')) {
@@ -96,6 +93,11 @@ class BiliClient implements OriginService {
               type: DioExceptionType.badResponse,
             );
           }
+
+          if (response.data is! Map) {
+            return handler.next(response);
+          }
+
           final code = response.data['code'];
           final message = response.data['message'];
           final resData = response.data['data'];
@@ -300,12 +302,12 @@ class BiliClient implements OriginService {
     Map<String, String> query = _signParams({
       'term': keyword,
     });
-    final response = await dio.get(
-      Uri.parse(url).replace(queryParameters: query).toString(),
-    );
+    final response = await dio.get(url, queryParameters: query);
 
     if (response.statusCode == 200) {
-      final List<dynamic> tags = jsonDecode(response.data)['result']['tag'];
+      final data =
+          response.data is String ? jsonDecode(response.data) : response.data;
+      final List<dynamic> tags = data['result']['tag'];
       List<SearchSuggestItem> result = [];
       tags.toList().forEach((t) {
         result.add(SearchSuggestItem(name: t['name'], value: t['value']));
