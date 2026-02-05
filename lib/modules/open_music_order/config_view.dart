@@ -1,3 +1,5 @@
+import 'package:bbmusic/database/database.dart';
+import 'package:bbmusic/database/uuid.dart';
 import 'package:bbmusic/modules/open_music_order/model.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,7 @@ class OpenMusicOrderConfigView extends StatefulWidget {
 
 class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
   List<String> _list = [];
+  final db = AppDatabase();
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -28,13 +31,9 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
     });
   }
 
-  _saveHandler() async {
-    await setMusicOrderUrl(_list);
-    Provider.of<OpenMusicOrderModel>(context).reload();
-  }
-
   @override
   Widget build(BuildContext context) {
+    final model = Provider.of<OpenMusicOrderModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text("歌单源配置"),
@@ -45,12 +44,17 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
               (e) => ListTile(
                 title: Text(e),
                 trailing: IconButton(
+                  // 删除按钮
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () {
+                  onPressed: () async {
+                    // 数据库删除
+                    await db.managers.openMusicOrderUrlEntity
+                        .filter((f) => f.url.equals(e))
+                        .delete();
                     setState(() {
                       _list.remove(e);
-                      _saveHandler();
                     });
+                    model.reload();
                   },
                 ),
               ),
@@ -75,10 +79,16 @@ class _OpenMusicOrderConfigViewState extends State<OpenMusicOrderConfigView> {
                       bottom: MediaQuery.of(context).viewInsets.bottom + 15,
                     ),
                     child: FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
                         _list.add(_controller.text);
                         Navigator.of(context).pop();
-                        _saveHandler();
+                        await db.managers.openMusicOrderUrlEntity.create(
+                          (o) => o(
+                            id: generateUUID(),
+                            url: _controller.text,
+                          ),
+                        );
+                        model.reload();
                       },
                       child: const Text('添加'),
                     ),

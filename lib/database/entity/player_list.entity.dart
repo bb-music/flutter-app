@@ -21,4 +21,7 @@ class PlayerListEntity extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   // 更新时间
   DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

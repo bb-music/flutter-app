@@ -1,22 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:bbmusic/constants/cache_key.dart';
+import 'package:bbmusic/database/database.dart';
+import 'package:bbmusic/database/uuid.dart';
 import 'package:bbmusic/modules/user_music_order/common.dart';
 import 'package:bbmusic/modules/user_music_order/local/constants.dart';
 import 'package:bbmusic/modules/user_music_order/user_music_order.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
 
 class MusicOrderOriginSettingModel extends ChangeNotifier {
   List<OriginSettingItem> list = [];
-  Timer? _timer;
   bool isInit = false;
+  final db = AppDatabase();
 
   List<UserMusicOrderOriginItem> userMusicOrderList = [];
 
@@ -31,23 +32,20 @@ class MusicOrderOriginSettingModel extends ChangeNotifier {
 
   // 加载源配置列表
   load() async {
-    final localStorage = await SharedPreferences.getInstance();
-    final jsonStr = localStorage.getString(CacheKey.cloudMusicOrderSetting);
+    // 云端歌单源
+    final cloudList = await db.managers.cloudMusicOrderEntity.get();
     list.clear();
-    if (jsonStr != null) {
-      List<dynamic> resList = jsonDecode(jsonStr);
-      list.addAll(resList.where((t) => t['name'] != LocalOriginConst.name).map(
-        (l) {
-          return OriginSettingItem(
-            id: l['id'],
-            name: l['name'],
-            subName: l['sub_name'] ?? '',
-            config: l['config'],
-          );
-        },
-      ));
-    }
-    // 插入到数组首位
+    list.addAll(cloudList.where((t) => t.origin != LocalOriginConst.name).map(
+      (l) {
+        return OriginSettingItem(
+          id: l.id.toString(),
+          name: l.origin,
+          subName: l.subName ?? '',
+          config: jsonDecode(l.config ?? '{}'),
+        );
+      },
+    ));
+    // 本地歌单源列表
     list.insert(
       0,
       OriginSettingItem(
@@ -61,44 +59,42 @@ class MusicOrderOriginSettingModel extends ChangeNotifier {
 
   // 更新源配置列表
   void update(String id, String subName, Map<String, dynamic> config) async {
-    for (var l in list) {
-      if (l.id == id) {
-        l.subName = subName;
-        l.config = config;
-      }
-    }
-    _updateLocalStorage();
+    await db.managers.cloudMusicOrderEntity
+        .filter((f) => f.id.equals(id))
+        .update((o) {
+      return o(
+        subName: Value(subName),
+        config: Value(jsonEncode(config)),
+      );
+    });
+    await load();
+    await initUserMusicOrderList();
     notifyListeners();
   }
 
   // 新增源配置
   void add(String name, String subName, Map<String, dynamic> config) async {
-    list.add(OriginSettingItem(
-      name: name,
-      id: uuid.v4(),
-      subName: subName,
-      config: config,
-    ));
-    _updateLocalStorage();
+    await db.managers.cloudMusicOrderEntity.create((o) {
+      return o(
+        id: generateUUID(),
+        origin: name,
+        subName: subName,
+        config: jsonEncode(config),
+      );
+    });
+    await load();
+    await initUserMusicOrderList();
     notifyListeners();
   }
 
   // 删除源配置
   void delete(String id) async {
-    list.removeWhere((o) => o.id == id);
-    _updateLocalStorage();
+    await db.managers.cloudMusicOrderEntity
+        .filter((f) => f.id.equals(id))
+        .delete();
+    await load();
+    await initUserMusicOrderList();
     notifyListeners();
-  }
-
-  // 更新缓存
-  void _updateLocalStorage() {
-    _timer?.cancel();
-    _timer = Timer(const Duration(microseconds: 500), () async {
-      final localStorage = await SharedPreferences.getInstance();
-      String listStr = jsonEncode(list);
-      localStorage.setString(CacheKey.cloudMusicOrderSetting, listStr);
-      initUserMusicOrderList();
-    });
   }
 
   OriginSettingItem? id2OriginInfo(String id) {

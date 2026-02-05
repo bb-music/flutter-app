@@ -11,13 +11,9 @@ class $CloudMusicOrderEntityTable extends CloudMusicOrderEntity
   $CloudMusicOrderEntityTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _originMeta = const VerificationMeta('origin');
   @override
   late final GeneratedColumn<String> origin = GeneratedColumn<String>(
@@ -64,6 +60,8 @@ class $CloudMusicOrderEntityTable extends CloudMusicOrderEntity
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('origin')) {
       context.handle(_originMeta,
@@ -102,7 +100,7 @@ class $CloudMusicOrderEntityTable extends CloudMusicOrderEntity
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CloudMusicOrderEntityData(
       id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       origin: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}origin'])!,
       subName: attachedDatabase.typeMapping
@@ -124,7 +122,7 @@ class $CloudMusicOrderEntityTable extends CloudMusicOrderEntity
 
 class CloudMusicOrderEntityData extends DataClass
     implements Insertable<CloudMusicOrderEntityData> {
-  final int id;
+  final String id;
   final String origin;
   final String subName;
   final String config;
@@ -140,7 +138,7 @@ class CloudMusicOrderEntityData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['origin'] = Variable<String>(origin);
     map['sub_name'] = Variable<String>(subName);
     map['config'] = Variable<String>(config);
@@ -168,7 +166,7 @@ class CloudMusicOrderEntityData extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CloudMusicOrderEntityData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       origin: serializer.fromJson<String>(json['origin']),
       subName: serializer.fromJson<String>(json['subName']),
       config: serializer.fromJson<String>(json['config']),
@@ -180,7 +178,7 @@ class CloudMusicOrderEntityData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'origin': serializer.toJson<String>(origin),
       'subName': serializer.toJson<String>(subName),
       'config': serializer.toJson<String>(config),
@@ -190,7 +188,7 @@ class CloudMusicOrderEntityData extends DataClass
   }
 
   CloudMusicOrderEntityData copyWith(
-          {int? id,
+          {String? id,
           String? origin,
           String? subName,
           String? config,
@@ -246,12 +244,13 @@ class CloudMusicOrderEntityData extends DataClass
 
 class CloudMusicOrderEntityCompanion
     extends UpdateCompanion<CloudMusicOrderEntityData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> origin;
   final Value<String> subName;
   final Value<String> config;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
   const CloudMusicOrderEntityCompanion({
     this.id = const Value.absent(),
     this.origin = const Value.absent(),
@@ -259,24 +258,28 @@ class CloudMusicOrderEntityCompanion
     this.config = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CloudMusicOrderEntityCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String origin,
     required String subName,
     required String config,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : origin = Value(origin),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        origin = Value(origin),
         subName = Value(subName),
         config = Value(config);
   static Insertable<CloudMusicOrderEntityData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? origin,
     Expression<String>? subName,
     Expression<String>? config,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -285,16 +288,18 @@ class CloudMusicOrderEntityCompanion
       if (config != null) 'config': config,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CloudMusicOrderEntityCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? id,
       Value<String>? origin,
       Value<String>? subName,
       Value<String>? config,
       Value<DateTime>? createdAt,
-      Value<DateTime?>? updatedAt}) {
+      Value<DateTime?>? updatedAt,
+      Value<int>? rowid}) {
     return CloudMusicOrderEntityCompanion(
       id: id ?? this.id,
       origin: origin ?? this.origin,
@@ -302,6 +307,7 @@ class CloudMusicOrderEntityCompanion
       config: config ?? this.config,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -309,7 +315,7 @@ class CloudMusicOrderEntityCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (origin.present) {
       map['origin'] = Variable<String>(origin.value);
@@ -326,6 +332,9 @@ class CloudMusicOrderEntityCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -337,7 +346,8 @@ class CloudMusicOrderEntityCompanion
           ..write('subName: $subName, ')
           ..write('config: $config, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -351,13 +361,9 @@ class $LocalMusicOrderEntityTable extends LocalMusicOrderEntity
   $LocalMusicOrderEntityTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -408,6 +414,8 @@ class $LocalMusicOrderEntityTable extends LocalMusicOrderEntity
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -446,7 +454,7 @@ class $LocalMusicOrderEntityTable extends LocalMusicOrderEntity
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalMusicOrderEntityData(
       id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       desc: attachedDatabase.typeMapping
@@ -470,7 +478,7 @@ class $LocalMusicOrderEntityTable extends LocalMusicOrderEntity
 
 class LocalMusicOrderEntityData extends DataClass
     implements Insertable<LocalMusicOrderEntityData> {
-  final int id;
+  final String id;
   final String name;
   final String? desc;
   final String? cover;
@@ -488,7 +496,7 @@ class LocalMusicOrderEntityData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || desc != null) {
       map['desc'] = Variable<String>(desc);
@@ -526,7 +534,7 @@ class LocalMusicOrderEntityData extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalMusicOrderEntityData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       desc: serializer.fromJson<String?>(json['desc']),
       cover: serializer.fromJson<String?>(json['cover']),
@@ -539,7 +547,7 @@ class LocalMusicOrderEntityData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'desc': serializer.toJson<String?>(desc),
       'cover': serializer.toJson<String?>(cover),
@@ -550,7 +558,7 @@ class LocalMusicOrderEntityData extends DataClass
   }
 
   LocalMusicOrderEntityData copyWith(
-          {int? id,
+          {String? id,
           String? name,
           Value<String?> desc = const Value.absent(),
           Value<String?> cover = const Value.absent(),
@@ -611,13 +619,14 @@ class LocalMusicOrderEntityData extends DataClass
 
 class LocalMusicOrderEntityCompanion
     extends UpdateCompanion<LocalMusicOrderEntityData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<String?> desc;
   final Value<String?> cover;
   final Value<String?> author;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
   const LocalMusicOrderEntityCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -626,24 +635,28 @@ class LocalMusicOrderEntityCompanion
     this.author = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   LocalMusicOrderEntityCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
     this.desc = const Value.absent(),
     this.cover = const Value.absent(),
     this.author = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : name = Value(name);
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name);
   static Insertable<LocalMusicOrderEntityData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<String>? desc,
     Expression<String>? cover,
     Expression<String>? author,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -653,17 +666,19 @@ class LocalMusicOrderEntityCompanion
       if (author != null) 'author': author,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   LocalMusicOrderEntityCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? id,
       Value<String>? name,
       Value<String?>? desc,
       Value<String?>? cover,
       Value<String?>? author,
       Value<DateTime>? createdAt,
-      Value<DateTime?>? updatedAt}) {
+      Value<DateTime?>? updatedAt,
+      Value<int>? rowid}) {
     return LocalMusicOrderEntityCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -672,6 +687,7 @@ class LocalMusicOrderEntityCompanion
       author: author ?? this.author,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -679,7 +695,7 @@ class LocalMusicOrderEntityCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -699,6 +715,9 @@ class LocalMusicOrderEntityCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -711,7 +730,8 @@ class LocalMusicOrderEntityCompanion
           ..write('cover: $cover, ')
           ..write('author: $author, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -723,21 +743,17 @@ class $LocalMusicListEntityTable extends LocalMusicListEntity
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LocalMusicListEntityTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _orderIdMeta =
       const VerificationMeta('orderId');
   @override
-  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> orderId = GeneratedColumn<String>(
       'order_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _musicIdMeta =
       const VerificationMeta('musicId');
   @override
@@ -786,8 +802,8 @@ class $LocalMusicListEntityTable extends LocalMusicListEntity
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
-        orderId,
         id,
+        orderId,
         musicId,
         name,
         duration,
@@ -808,14 +824,16 @@ class $LocalMusicListEntityTable extends LocalMusicListEntity
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
     if (data.containsKey('order_id')) {
       context.handle(_orderIdMeta,
           orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta));
     } else if (isInserting) {
       context.missing(_orderIdMeta);
-    }
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('music_id')) {
       context.handle(_musicIdMeta,
@@ -867,10 +885,10 @@ class $LocalMusicListEntityTable extends LocalMusicListEntity
       {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalMusicListEntityData(
-      orderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}order_id'])!,
       id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      orderId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}order_id'])!,
       musicId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}music_id'])!,
       name: attachedDatabase.typeMapping
@@ -898,8 +916,8 @@ class $LocalMusicListEntityTable extends LocalMusicListEntity
 
 class LocalMusicListEntityData extends DataClass
     implements Insertable<LocalMusicListEntityData> {
-  final int orderId;
-  final int id;
+  final String id;
+  final String orderId;
   final String musicId;
   final String name;
   final int duration;
@@ -909,8 +927,8 @@ class LocalMusicListEntityData extends DataClass
   final DateTime createdAt;
   final DateTime? updatedAt;
   const LocalMusicListEntityData(
-      {required this.orderId,
-      required this.id,
+      {required this.id,
+      required this.orderId,
       required this.musicId,
       required this.name,
       required this.duration,
@@ -922,8 +940,8 @@ class LocalMusicListEntityData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['order_id'] = Variable<int>(orderId);
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
+    map['order_id'] = Variable<String>(orderId);
     map['music_id'] = Variable<String>(musicId);
     map['name'] = Variable<String>(name);
     map['duration'] = Variable<int>(duration);
@@ -943,8 +961,8 @@ class LocalMusicListEntityData extends DataClass
 
   LocalMusicListEntityCompanion toCompanion(bool nullToAbsent) {
     return LocalMusicListEntityCompanion(
-      orderId: Value(orderId),
       id: Value(id),
+      orderId: Value(orderId),
       musicId: Value(musicId),
       name: Value(name),
       duration: Value(duration),
@@ -964,8 +982,8 @@ class LocalMusicListEntityData extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalMusicListEntityData(
-      orderId: serializer.fromJson<int>(json['orderId']),
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
+      orderId: serializer.fromJson<String>(json['orderId']),
       musicId: serializer.fromJson<String>(json['musicId']),
       name: serializer.fromJson<String>(json['name']),
       duration: serializer.fromJson<int>(json['duration']),
@@ -980,8 +998,8 @@ class LocalMusicListEntityData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'orderId': serializer.toJson<int>(orderId),
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
+      'orderId': serializer.toJson<String>(orderId),
       'musicId': serializer.toJson<String>(musicId),
       'name': serializer.toJson<String>(name),
       'duration': serializer.toJson<int>(duration),
@@ -994,8 +1012,8 @@ class LocalMusicListEntityData extends DataClass
   }
 
   LocalMusicListEntityData copyWith(
-          {int? orderId,
-          int? id,
+          {String? id,
+          String? orderId,
           String? musicId,
           String? name,
           int? duration,
@@ -1005,8 +1023,8 @@ class LocalMusicListEntityData extends DataClass
           DateTime? createdAt,
           Value<DateTime?> updatedAt = const Value.absent()}) =>
       LocalMusicListEntityData(
-        orderId: orderId ?? this.orderId,
         id: id ?? this.id,
+        orderId: orderId ?? this.orderId,
         musicId: musicId ?? this.musicId,
         name: name ?? this.name,
         duration: duration ?? this.duration,
@@ -1019,8 +1037,8 @@ class LocalMusicListEntityData extends DataClass
   LocalMusicListEntityData copyWithCompanion(
       LocalMusicListEntityCompanion data) {
     return LocalMusicListEntityData(
-      orderId: data.orderId.present ? data.orderId.value : this.orderId,
       id: data.id.present ? data.id.value : this.id,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
       musicId: data.musicId.present ? data.musicId.value : this.musicId,
       name: data.name.present ? data.name.value : this.name,
       duration: data.duration.present ? data.duration.value : this.duration,
@@ -1035,8 +1053,8 @@ class LocalMusicListEntityData extends DataClass
   @override
   String toString() {
     return (StringBuffer('LocalMusicListEntityData(')
-          ..write('orderId: $orderId, ')
           ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
           ..write('musicId: $musicId, ')
           ..write('name: $name, ')
           ..write('duration: $duration, ')
@@ -1050,14 +1068,14 @@ class LocalMusicListEntityData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(orderId, id, musicId, name, duration, cover,
+  int get hashCode => Object.hash(id, orderId, musicId, name, duration, cover,
       author, origin, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LocalMusicListEntityData &&
-          other.orderId == this.orderId &&
           other.id == this.id &&
+          other.orderId == this.orderId &&
           other.musicId == this.musicId &&
           other.name == this.name &&
           other.duration == this.duration &&
@@ -1070,8 +1088,8 @@ class LocalMusicListEntityData extends DataClass
 
 class LocalMusicListEntityCompanion
     extends UpdateCompanion<LocalMusicListEntityData> {
-  final Value<int> orderId;
-  final Value<int> id;
+  final Value<String> id;
+  final Value<String> orderId;
   final Value<String> musicId;
   final Value<String> name;
   final Value<int> duration;
@@ -1080,9 +1098,10 @@ class LocalMusicListEntityCompanion
   final Value<String> origin;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
   const LocalMusicListEntityCompanion({
-    this.orderId = const Value.absent(),
     this.id = const Value.absent(),
+    this.orderId = const Value.absent(),
     this.musicId = const Value.absent(),
     this.name = const Value.absent(),
     this.duration = const Value.absent(),
@@ -1091,10 +1110,11 @@ class LocalMusicListEntityCompanion
     this.origin = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   LocalMusicListEntityCompanion.insert({
-    required int orderId,
-    this.id = const Value.absent(),
+    required String id,
+    required String orderId,
     required String musicId,
     required String name,
     required int duration,
@@ -1103,14 +1123,16 @@ class LocalMusicListEntityCompanion
     required String origin,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : orderId = Value(orderId),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        orderId = Value(orderId),
         musicId = Value(musicId),
         name = Value(name),
         duration = Value(duration),
         origin = Value(origin);
   static Insertable<LocalMusicListEntityData> custom({
-    Expression<int>? orderId,
-    Expression<int>? id,
+    Expression<String>? id,
+    Expression<String>? orderId,
     Expression<String>? musicId,
     Expression<String>? name,
     Expression<int>? duration,
@@ -1119,10 +1141,11 @@ class LocalMusicListEntityCompanion
     Expression<String>? origin,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (orderId != null) 'order_id': orderId,
       if (id != null) 'id': id,
+      if (orderId != null) 'order_id': orderId,
       if (musicId != null) 'music_id': musicId,
       if (name != null) 'name': name,
       if (duration != null) 'duration': duration,
@@ -1131,12 +1154,13 @@ class LocalMusicListEntityCompanion
       if (origin != null) 'origin': origin,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   LocalMusicListEntityCompanion copyWith(
-      {Value<int>? orderId,
-      Value<int>? id,
+      {Value<String>? id,
+      Value<String>? orderId,
       Value<String>? musicId,
       Value<String>? name,
       Value<int>? duration,
@@ -1144,10 +1168,11 @@ class LocalMusicListEntityCompanion
       Value<String?>? author,
       Value<String>? origin,
       Value<DateTime>? createdAt,
-      Value<DateTime?>? updatedAt}) {
+      Value<DateTime?>? updatedAt,
+      Value<int>? rowid}) {
     return LocalMusicListEntityCompanion(
-      orderId: orderId ?? this.orderId,
       id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
       musicId: musicId ?? this.musicId,
       name: name ?? this.name,
       duration: duration ?? this.duration,
@@ -1156,17 +1181,18 @@ class LocalMusicListEntityCompanion
       origin: origin ?? this.origin,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (orderId.present) {
-      map['order_id'] = Variable<int>(orderId.value);
-    }
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<String>(orderId.value);
     }
     if (musicId.present) {
       map['music_id'] = Variable<String>(musicId.value);
@@ -1192,14 +1218,17 @@ class LocalMusicListEntityCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('LocalMusicListEntityCompanion(')
-          ..write('orderId: $orderId, ')
           ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
           ..write('musicId: $musicId, ')
           ..write('name: $name, ')
           ..write('duration: $duration, ')
@@ -1207,7 +1236,8 @@ class LocalMusicListEntityCompanion
           ..write('author: $author, ')
           ..write('origin: $origin, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1221,13 +1251,9 @@ class $OpenMusicOrderUrlEntityTable extends OpenMusicOrderUrlEntity
   $OpenMusicOrderUrlEntityTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _urlMeta = const VerificationMeta('url');
   @override
   late final GeneratedColumn<String> url = GeneratedColumn<String>(
@@ -1256,6 +1282,8 @@ class $OpenMusicOrderUrlEntityTable extends OpenMusicOrderUrlEntity
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
     if (data.containsKey('url')) {
       context.handle(
@@ -1278,7 +1306,7 @@ class $OpenMusicOrderUrlEntityTable extends OpenMusicOrderUrlEntity
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OpenMusicOrderUrlEntityData(
       id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       url: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}url'])!,
       createdAt: attachedDatabase.typeMapping
@@ -1294,7 +1322,7 @@ class $OpenMusicOrderUrlEntityTable extends OpenMusicOrderUrlEntity
 
 class OpenMusicOrderUrlEntityData extends DataClass
     implements Insertable<OpenMusicOrderUrlEntityData> {
-  final int id;
+  final String id;
   final String url;
   final DateTime createdAt;
   const OpenMusicOrderUrlEntityData(
@@ -1302,7 +1330,7 @@ class OpenMusicOrderUrlEntityData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['url'] = Variable<String>(url);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1320,7 +1348,7 @@ class OpenMusicOrderUrlEntityData extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OpenMusicOrderUrlEntityData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       url: serializer.fromJson<String>(json['url']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1329,14 +1357,14 @@ class OpenMusicOrderUrlEntityData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'url': serializer.toJson<String>(url),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
   OpenMusicOrderUrlEntityData copyWith(
-          {int? id, String? url, DateTime? createdAt}) =>
+          {String? id, String? url, DateTime? createdAt}) =>
       OpenMusicOrderUrlEntityData(
         id: id ?? this.id,
         url: url ?? this.url,
@@ -1374,37 +1402,47 @@ class OpenMusicOrderUrlEntityData extends DataClass
 
 class OpenMusicOrderUrlEntityCompanion
     extends UpdateCompanion<OpenMusicOrderUrlEntityData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> url;
   final Value<DateTime> createdAt;
+  final Value<int> rowid;
   const OpenMusicOrderUrlEntityCompanion({
     this.id = const Value.absent(),
     this.url = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   OpenMusicOrderUrlEntityCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String url,
     this.createdAt = const Value.absent(),
-  }) : url = Value(url);
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        url = Value(url);
   static Insertable<OpenMusicOrderUrlEntityData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? url,
     Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (url != null) 'url': url,
       if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   OpenMusicOrderUrlEntityCompanion copyWith(
-      {Value<int>? id, Value<String>? url, Value<DateTime>? createdAt}) {
+      {Value<String>? id,
+      Value<String>? url,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
     return OpenMusicOrderUrlEntityCompanion(
       id: id ?? this.id,
       url: url ?? this.url,
       createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1412,13 +1450,16 @@ class OpenMusicOrderUrlEntityCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (url.present) {
       map['url'] = Variable<String>(url.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1428,7 +1469,8 @@ class OpenMusicOrderUrlEntityCompanion
     return (StringBuffer('OpenMusicOrderUrlEntityCompanion(')
           ..write('id: $id, ')
           ..write('url: $url, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1542,7 +1584,7 @@ class $PlayerListEntityTable extends PlayerListEntity
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => const {};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   PlayerListEntityData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -2081,21 +2123,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 typedef $$CloudMusicOrderEntityTableCreateCompanionBuilder
     = CloudMusicOrderEntityCompanion Function({
-  Value<int> id,
+  required String id,
   required String origin,
   required String subName,
   required String config,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 typedef $$CloudMusicOrderEntityTableUpdateCompanionBuilder
     = CloudMusicOrderEntityCompanion Function({
-  Value<int> id,
+  Value<String> id,
   Value<String> origin,
   Value<String> subName,
   Value<String> config,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 
 class $$CloudMusicOrderEntityTableFilterComposer
@@ -2107,7 +2151,7 @@ class $$CloudMusicOrderEntityTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get origin => $composableBuilder(
@@ -2135,7 +2179,7 @@ class $$CloudMusicOrderEntityTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get origin => $composableBuilder(
@@ -2163,7 +2207,7 @@ class $$CloudMusicOrderEntityTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get origin =>
@@ -2213,12 +2257,13 @@ class $$CloudMusicOrderEntityTableTableManager extends RootTableManager<
               $$CloudMusicOrderEntityTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> id = const Value.absent(),
             Value<String> origin = const Value.absent(),
             Value<String> subName = const Value.absent(),
             Value<String> config = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               CloudMusicOrderEntityCompanion(
             id: id,
@@ -2227,14 +2272,16 @@ class $$CloudMusicOrderEntityTableTableManager extends RootTableManager<
             config: config,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String id,
             required String origin,
             required String subName,
             required String config,
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               CloudMusicOrderEntityCompanion.insert(
             id: id,
@@ -2243,6 +2290,7 @@ class $$CloudMusicOrderEntityTableTableManager extends RootTableManager<
             config: config,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2270,23 +2318,25 @@ typedef $$CloudMusicOrderEntityTableProcessedTableManager
         PrefetchHooks Function()>;
 typedef $$LocalMusicOrderEntityTableCreateCompanionBuilder
     = LocalMusicOrderEntityCompanion Function({
-  Value<int> id,
+  required String id,
   required String name,
   Value<String?> desc,
   Value<String?> cover,
   Value<String?> author,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 typedef $$LocalMusicOrderEntityTableUpdateCompanionBuilder
     = LocalMusicOrderEntityCompanion Function({
-  Value<int> id,
+  Value<String> id,
   Value<String> name,
   Value<String?> desc,
   Value<String?> cover,
   Value<String?> author,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 
 class $$LocalMusicOrderEntityTableFilterComposer
@@ -2298,7 +2348,7 @@ class $$LocalMusicOrderEntityTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
@@ -2329,7 +2379,7 @@ class $$LocalMusicOrderEntityTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
@@ -2360,7 +2410,7 @@ class $$LocalMusicOrderEntityTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -2413,13 +2463,14 @@ class $$LocalMusicOrderEntityTableTableManager extends RootTableManager<
               $$LocalMusicOrderEntityTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String?> desc = const Value.absent(),
             Value<String?> cover = const Value.absent(),
             Value<String?> author = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               LocalMusicOrderEntityCompanion(
             id: id,
@@ -2429,15 +2480,17 @@ class $$LocalMusicOrderEntityTableTableManager extends RootTableManager<
             author: author,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String id,
             required String name,
             Value<String?> desc = const Value.absent(),
             Value<String?> cover = const Value.absent(),
             Value<String?> author = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               LocalMusicOrderEntityCompanion.insert(
             id: id,
@@ -2447,6 +2500,7 @@ class $$LocalMusicOrderEntityTableTableManager extends RootTableManager<
             author: author,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2474,8 +2528,8 @@ typedef $$LocalMusicOrderEntityTableProcessedTableManager
         PrefetchHooks Function()>;
 typedef $$LocalMusicListEntityTableCreateCompanionBuilder
     = LocalMusicListEntityCompanion Function({
-  required int orderId,
-  Value<int> id,
+  required String id,
+  required String orderId,
   required String musicId,
   required String name,
   required int duration,
@@ -2484,11 +2538,12 @@ typedef $$LocalMusicListEntityTableCreateCompanionBuilder
   required String origin,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 typedef $$LocalMusicListEntityTableUpdateCompanionBuilder
     = LocalMusicListEntityCompanion Function({
-  Value<int> orderId,
-  Value<int> id,
+  Value<String> id,
+  Value<String> orderId,
   Value<String> musicId,
   Value<String> name,
   Value<int> duration,
@@ -2497,6 +2552,7 @@ typedef $$LocalMusicListEntityTableUpdateCompanionBuilder
   Value<String> origin,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
+  Value<int> rowid,
 });
 
 class $$LocalMusicListEntityTableFilterComposer
@@ -2508,11 +2564,11 @@ class $$LocalMusicListEntityTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get orderId => $composableBuilder(
-      column: $table.orderId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get orderId => $composableBuilder(
+      column: $table.orderId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get musicId => $composableBuilder(
       column: $table.musicId, builder: (column) => ColumnFilters(column));
@@ -2548,11 +2604,11 @@ class $$LocalMusicListEntityTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get orderId => $composableBuilder(
-      column: $table.orderId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get orderId => $composableBuilder(
+      column: $table.orderId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get musicId => $composableBuilder(
       column: $table.musicId, builder: (column) => ColumnOrderings(column));
@@ -2588,11 +2644,11 @@ class $$LocalMusicListEntityTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get orderId =>
-      $composableBuilder(column: $table.orderId, builder: (column) => column);
-
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get orderId =>
+      $composableBuilder(column: $table.orderId, builder: (column) => column);
 
   GeneratedColumn<String> get musicId =>
       $composableBuilder(column: $table.musicId, builder: (column) => column);
@@ -2649,8 +2705,8 @@ class $$LocalMusicListEntityTableTableManager extends RootTableManager<
               $$LocalMusicListEntityTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> orderId = const Value.absent(),
-            Value<int> id = const Value.absent(),
+            Value<String> id = const Value.absent(),
+            Value<String> orderId = const Value.absent(),
             Value<String> musicId = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<int> duration = const Value.absent(),
@@ -2659,10 +2715,11 @@ class $$LocalMusicListEntityTableTableManager extends RootTableManager<
             Value<String> origin = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               LocalMusicListEntityCompanion(
-            orderId: orderId,
             id: id,
+            orderId: orderId,
             musicId: musicId,
             name: name,
             duration: duration,
@@ -2671,10 +2728,11 @@ class $$LocalMusicListEntityTableTableManager extends RootTableManager<
             origin: origin,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            required int orderId,
-            Value<int> id = const Value.absent(),
+            required String id,
+            required String orderId,
             required String musicId,
             required String name,
             required int duration,
@@ -2683,10 +2741,11 @@ class $$LocalMusicListEntityTableTableManager extends RootTableManager<
             required String origin,
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               LocalMusicListEntityCompanion.insert(
-            orderId: orderId,
             id: id,
+            orderId: orderId,
             musicId: musicId,
             name: name,
             duration: duration,
@@ -2695,6 +2754,7 @@ class $$LocalMusicListEntityTableTableManager extends RootTableManager<
             origin: origin,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2722,15 +2782,17 @@ typedef $$LocalMusicListEntityTableProcessedTableManager
         PrefetchHooks Function()>;
 typedef $$OpenMusicOrderUrlEntityTableCreateCompanionBuilder
     = OpenMusicOrderUrlEntityCompanion Function({
-  Value<int> id,
+  required String id,
   required String url,
   Value<DateTime> createdAt,
+  Value<int> rowid,
 });
 typedef $$OpenMusicOrderUrlEntityTableUpdateCompanionBuilder
     = OpenMusicOrderUrlEntityCompanion Function({
-  Value<int> id,
+  Value<String> id,
   Value<String> url,
   Value<DateTime> createdAt,
+  Value<int> rowid,
 });
 
 class $$OpenMusicOrderUrlEntityTableFilterComposer
@@ -2742,7 +2804,7 @@ class $$OpenMusicOrderUrlEntityTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get url => $composableBuilder(
@@ -2761,7 +2823,7 @@ class $$OpenMusicOrderUrlEntityTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get url => $composableBuilder(
@@ -2780,7 +2842,7 @@ class $$OpenMusicOrderUrlEntityTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get url =>
@@ -2821,24 +2883,28 @@ class $$OpenMusicOrderUrlEntityTableTableManager extends RootTableManager<
               $$OpenMusicOrderUrlEntityTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> id = const Value.absent(),
             Value<String> url = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               OpenMusicOrderUrlEntityCompanion(
             id: id,
             url: url,
             createdAt: createdAt,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String id,
             required String url,
             Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               OpenMusicOrderUrlEntityCompanion.insert(
             id: id,
             url: url,
             createdAt: createdAt,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

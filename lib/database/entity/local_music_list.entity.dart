@@ -1,16 +1,14 @@
+import 'package:bbmusic/database/uuid.dart';
 import 'package:drift/drift.dart';
 
 // 本地歌单音乐列表
 class LocalMusicListEntity extends Table {
   @override
   String get tableName => 'local_music_list';
-
-  // 关联的歌单 ID
-  IntColumn get orderId => integer()();
-
   // ID
-  IntColumn get id => integer().autoIncrement()();
-
+  TextColumn get id => text()();
+  // 关联的歌单 ID
+  TextColumn get orderId => text()();
   // 歌曲 ID
   TextColumn get musicId => text()();
   // 歌曲名称
@@ -28,4 +26,7 @@ class LocalMusicListEntity extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   // 更新时间
   DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

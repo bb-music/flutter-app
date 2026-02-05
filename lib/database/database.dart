@@ -1,9 +1,9 @@
-import 'package:bbmusic/modules/database/entity/cloud_music_order.entity.dart';
-import 'package:bbmusic/modules/database/entity/local_music_list.entity.dart';
-import 'package:bbmusic/modules/database/entity/local_music_order.entity.dart';
-import 'package:bbmusic/modules/database/entity/open_music_order_url.entity.dart';
-import 'package:bbmusic/modules/database/entity/player_list.entity.dart';
-import 'package:bbmusic/modules/database/entity/search_history.entity.dart';
+import 'package:bbmusic/database/entity/cloud_music_order.entity.dart';
+import 'package:bbmusic/database/entity/local_music_list.entity.dart';
+import 'package:bbmusic/database/entity/local_music_order.entity.dart';
+import 'package:bbmusic/database/entity/open_music_order_url.entity.dart';
+import 'package:bbmusic/database/entity/player_list.entity.dart';
+import 'package:bbmusic/database/entity/search_history.entity.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';

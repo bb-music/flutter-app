@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:bbmusic/components/sheet/bottom_sheet.dart';
-import 'package:bbmusic/constants/cache_key.dart';
+import 'package:bbmusic/database/database.dart';
 import 'package:bbmusic/modules/music_order/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/components/text_tags/tags.dart';
 import 'package:bbmusic/modules/music_order/detail.dart';
@@ -12,7 +13,6 @@ import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/origin_sdk/service.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -30,6 +30,7 @@ class _SearchViewState extends State<SearchView> {
   final List<SearchItem> _searchItemList = [];
   List<String> _searchHistory = [];
   List<SearchSuggestItem> _searchSuggest = [];
+  final db = AppDatabase();
 
   // 搜索事件
   void _searchHandler(bool clean) async {
@@ -129,22 +130,19 @@ class _SearchViewState extends State<SearchView> {
   }
 
   updateSearchHistory(String keyword, {bool isDelete = false}) async {
-    final localStorage = await SharedPreferences.getInstance();
-    final list = localStorage.getStringList(CacheKey.searchHistory) ?? [];
-    if (list.contains(keyword)) {
-      list.remove(keyword);
-    }
-    // 添加
-    if (!isDelete) {
-      list.insert(0, keyword);
-      // 最多 40 条
-      if (list.length > 40) {
-        list.removeLast();
-      }
-    }
-    await localStorage.setStringList(CacheKey.searchHistory, list);
+    await db.managers.searchHistoryEntity.create((o) {
+      return o(
+        name: keyword,
+        createdAt: Value(DateTime.now()),
+      );
+    });
+
+    final list = await db.managers.searchHistoryEntity
+        .orderBy((o) => o.createdAt.desc())
+        .get();
+
     setState(() {
-      _searchHistory = list;
+      _searchHistory = list.map((e) => e.name).toList();
     });
   }
 
@@ -384,12 +382,22 @@ class _SearchFormState extends State<_SearchForm> {
 }
 
 Future<List<String>> getSearchHistoryData() async {
-  final localStorage = await SharedPreferences.getInstance();
-  final list = localStorage.getStringList(CacheKey.searchHistory);
-  return list ?? [];
+  final db = AppDatabase();
+  final list = await db.managers.searchHistoryEntity.get();
+  return list.map((e) => e.name).toList();
 }
 
 Future updateSearchHistoryData(List<String> list) async {
-  final localStorage = await SharedPreferences.getInstance();
-  await localStorage.setStringList(CacheKey.searchHistory, list);
+  final db = AppDatabase();
+  await db.managers.searchHistoryEntity.delete();
+  for (var p in list) {
+    await db.managers.searchHistoryEntity.create(
+      (o) {
+        return o(
+          name: p,
+        );
+      },
+      mode: InsertMode.replace,
+    );
+  }
 }

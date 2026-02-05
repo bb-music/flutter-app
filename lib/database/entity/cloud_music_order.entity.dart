@@ -6,7 +6,7 @@ class CloudMusicOrderEntity extends Table {
   String get tableName => 'cloud_music_order';
 
   // ID
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text()();
   // 歌单源
   TextColumn get origin => text()();
   // 名称
@@ -18,4 +18,7 @@ class CloudMusicOrderEntity extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   // 更新时间
   DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

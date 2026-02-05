@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bbmusic/constants/cache_key.dart';
+import 'package:bbmusic/database/database.dart';
+import 'package:bbmusic/database/uuid.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:bbmusic/modules/player/model.dart';
@@ -11,6 +13,7 @@ import 'package:bbmusic/modules/user_music_order/local/constants.dart';
 import 'package:bbmusic/modules/user_music_order/local/local.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -18,6 +21,7 @@ import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
 
 class LocalDataManage {
+  final db = AppDatabase();
   Future<Map<String, dynamic>> getData(BuildContext context) async {
     final player = Provider.of<PlayerModel>(context, listen: false);
     final orderOrigin =
@@ -35,7 +39,7 @@ class LocalDataManage {
         .map((l) => l.toJson())
         .toList();
     // 本地歌单
-    if (orderOrigin.userMusicOrderList.length > 0) {
+    if (orderOrigin.userMusicOrderList.isNotEmpty) {
       data[CacheKey.localMusicOrderList] = orderOrigin.userMusicOrderList
           .firstWhere((t) => t.id == LocalOriginConst.name)
           .list;
@@ -88,6 +92,7 @@ class LocalDataManage {
     }
   }
 
+  // 导入
   import(BuildContext context) async {
     final player = Provider.of<PlayerModel>(context, listen: false);
     final orderOrigin =
@@ -128,9 +133,15 @@ class LocalDataManage {
       // 广场源
       final openMusicOrderUrls = data[CacheKey.openMusicOrderUrls];
       if (openMusicOrderUrls is List && openMusicOrderUrls.isNotEmpty) {
-        setMusicOrderUrl(
-          openMusicOrderUrls.map((e) => e.toString()).toList(),
-        );
+        for (var url in openMusicOrderUrls) {
+          await db.managers.openMusicOrderUrlEntity.create(
+            (o) => o(
+              id: generateUUID(),
+              url: url.toString(),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+        }
       }
       // 云端歌单源
       final cloudList = data[CacheKey.cloudMusicOrderSetting];
@@ -148,9 +159,16 @@ class LocalDataManage {
       if (localList is List && localList.isNotEmpty) {
         for (var item in orderOrigin.userMusicOrderList) {
           if (item.service.name == LocalOriginConst.name) {
-            await updateLocalMusicOrderData(
-              localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
+            await db.managers.localMusicOrderEntity.create(
+              (o) => o(
+                id: generateUUID(),
+                name: item.service.cname,
+              ),
+              mode: InsertMode.insertOrReplace,
             );
+            // await updateLocalMusicOrderData(
+            //   localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
+            // );
             orderOrigin.loadSignal(LocalOriginConst.name);
           }
         }

@@ -35,7 +35,7 @@ abstract class UserMusicOrderOrigin {
 
   /// 添加歌曲
   /// id: 歌单id
-  Future<void> appendMusic(String id, List<MusicItem> musics);
+  Future<void> appendMusic(String int, List<MusicItem> musics);
 
   /// 更新歌曲
   /// id: 歌单id

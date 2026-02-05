@@ -3,20 +3,21 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:bbmusic/constants/cache_key.dart';
+import 'package:bbmusic/database/database.dart';
 import 'package:bbmusic/modules/player/const.dart';
 import 'package:bbmusic/modules/player/source.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/utils/utils.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _storageKeyCurrent = CacheKey.playerCurrent;
-final _storageKeyPlayerList = CacheKey.playerList;
-final _storageKeyHistoryList = CacheKey.playerHistoryList;
 final _storageKeyPlayerMode = CacheKey.playerMode;
 final _storageKeyPosition = CacheKey.playerPosition;
+final _storageKeyHistoryList = CacheKey.playerHistoryList;
 
 class BBPlayer {
   // 计时器
@@ -40,6 +41,8 @@ class BBPlayer {
   PlayerMode playerMode = PlayerMode.listLoop;
 
   late AutoCloseMusic autoClose;
+
+  final db = AppDatabase();
 
   Future<void> init() async {
     autoClose = AutoCloseMusic(onPause: () {
@@ -112,7 +115,6 @@ class BBPlayer {
 
         if (current?.id != music.id) {
           current = music;
-          // notifyListeners();
           _updateLocalStorage();
           log("播放新歌曲");
           await audio.seek(Duration.zero);
@@ -146,7 +148,6 @@ class BBPlayer {
           if (playerList.isNotEmpty) {
             // 播放列表不为空
             current = playerList.first;
-            // notifyListeners();
             _updateLocalStorage();
             if (current != null) {
               await _play(music: current);
@@ -316,25 +317,37 @@ class BBPlayer {
   }
 
   // 添加到播放列表中
-  void addPlayerList(List<MusicItem> musics) {
+  Future<void> addPlayerList(List<MusicItem> musics) async {
     removePlayerList(musics);
     playerList.addAll(musics);
-    _updateLocalStorage();
-    // notifyListeners();
+    await db.managers.playerListEntity
+        .filter((f) => f.id.isIn(musics.map((m) => m.id)))
+        .delete();
+    await db.managers.playerListEntity.bulkCreate((o) {
+      return musics.map((m) {
+        return o(
+          id: m.id,
+          cover: Value(m.cover),
+          name: m.name,
+          duration: m.duration,
+          author: Value(m.author),
+          origin: m.origin.toString(),
+        );
+      });
+    });
   }
 
   // 在播放列表中移除
-  void removePlayerList(List<MusicItem> musics) {
+  Future<void> removePlayerList(List<MusicItem> musics) async {
     playerList.removeWhere((w) => musics.where((e) => e.id == w.id).isNotEmpty);
-    _updateLocalStorage();
-    // notifyListeners();
+    final ids = musics.map((m) => m.id);
+    await db.managers.playerListEntity.filter((f) => f.id.isIn(ids)).delete();
   }
 
   // 清空播放列表
-  void clearPlayerList() {
+  Future<void> clearPlayerList() async {
     playerList.clear();
-    _updateLocalStorage();
-    // notifyListeners();
+    await db.playerListEntity.deleteAll();
   }
 
   // 添加到播放历史（用于随机播放）
@@ -382,10 +395,6 @@ class BBPlayer {
         _storageKeyHistoryList,
         _playerHistory,
       );
-      localStorage.setStringList(
-        _storageKeyPlayerList,
-        playerList.map((e) => jsonEncode(e)).toList(),
-      );
     });
   }
 
@@ -428,27 +437,21 @@ class BBPlayer {
     }
 
     // 播放列表
-    List<String>? pl = localStorage.getStringList(_storageKeyPlayerList);
-    if (pl != null && pl.isNotEmpty) {
-      clearPlayerList();
-      List<MusicItem> musics = [];
-      for (var e in pl) {
-        var data = jsonDecode(e) as Map<String, dynamic>;
-        musics.add(
-          MusicItem(
-            id: data['id'],
-            name: data['name'],
-            cover: data['cover'],
-            author: data['author'],
-            duration: data['duration'],
-            origin: OriginType.getByValue(data['origin']),
-          ),
+    List<PlayerListEntityData> pl = await db.managers.playerListEntity.get();
+    if (pl.isNotEmpty) {
+      playerList.clear();
+      final ms = pl.map((p) {
+        return MusicItem(
+          id: p.id,
+          name: p.name,
+          cover: p.cover ?? '',
+          author: p.author ?? '',
+          duration: p.duration,
+          origin: OriginType.getByValue(p.origin),
         );
-      }
-      addPlayerList(musics);
+      }).toList();
+      playerList.addAll(ms);
     }
-
-    // notifyListeners();
   }
 }
 

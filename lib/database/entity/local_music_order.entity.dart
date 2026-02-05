@@ -6,7 +6,7 @@ class LocalMusicOrderEntity extends Table {
   String get tableName => 'local_music_order';
 
   // ID
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text()();
   // 歌单名称
   TextColumn get name => text()();
   // 歌单描述
@@ -20,4 +20,7 @@ class LocalMusicOrderEntity extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   // 更新时间
   DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

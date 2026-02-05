@@ -1,9 +1,9 @@
-import 'dart:convert';
-
+import 'package:bbmusic/database/database.dart';
+import 'package:bbmusic/database/uuid.dart';
 import 'package:bbmusic/modules/user_music_order/local/constants.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../common.dart';
@@ -18,14 +18,31 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
   @override
   final IconData icon = Icons.folder;
 
+  final db = AppDatabase();
+
   Future<List<MusicOrderItem>> _loadData() async {
-    final localStorage = await SharedPreferences.getInstance();
-    final str = localStorage.getString(LocalOriginConst.cacheKey) ?? '[]';
-    final res = json.decode(str);
+    final orderList = await db.managers.localMusicOrderEntity.get();
+    final musicList = await db.managers.localMusicListEntity.get();
 
     final List<MusicOrderItem> list = [];
-    for (var item in res) {
-      list.add(MusicOrderItem.fromJson(item));
+    for (var item in orderList) {
+      final mList = musicList.where((m) => m.orderId == item.id).map((m) {
+        return MusicItem(
+          id: m.id.toString(),
+          name: m.name,
+          cover: m.cover ?? '',
+          author: m.author ?? '',
+          duration: m.duration,
+          origin: OriginType.getByValue(m.origin),
+        );
+      }).toList();
+      list.add(MusicOrderItem(
+        id: item.id,
+        name: item.name,
+        desc: item.desc ?? '',
+        author: item.author ?? '',
+        musicList: mList,
+      ));
     }
     return list;
   }
@@ -57,6 +74,38 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
 
   @override
   Future<void> create(data) async {
+    final info = await db.managers.localMusicOrderEntity
+        .filter((f) => f.name.equals(data.name.trim()))
+        .get();
+    if (info.isNotEmpty) {
+      throw Exception('歌单已存在');
+    }
+    final musicOrder =
+        await db.managers.localMusicOrderEntity.createReturning((o) {
+      return o(
+        id: generateUUID(),
+        name: data.name,
+        cover: Value(data.cover),
+        desc: Value(data.desc),
+        author: Value(data.author),
+      );
+    });
+    if (data.musicList.isNotEmpty) {
+      for (var m in data.musicList) {
+        await db.managers.localMusicListEntity.create((o) {
+          return o(
+            id: generateUUID(),
+            orderId: musicOrder.id,
+            musicId: m.id,
+            name: m.name,
+            cover: Value(m.cover),
+            author: Value(m.author),
+            duration: m.duration,
+            origin: m.origin.toString(),
+          );
+        });
+      }
+    }
     final list = await _loadData();
 
     // 判断歌单是否已存在
@@ -74,152 +123,115 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
         musicList: data.musicList,
       ),
     );
-
-    await _update(list);
-  }
-
-  Future<void> _update(List<MusicOrderItem> list) async {
-    await updateLocalMusicOrderData(list);
+    await getList();
   }
 
   @override
   Future<void> update(data) async {
-    final list = await _loadData();
-    final index = list.indexWhere((e) => e.id == data.id);
-    final current = list[index];
-    // 判断歌单是否已存在
-    if (index < 0) {
+    final current =
+        db.managers.localMusicOrderEntity.filter((f) => f.id.equals(data.id));
+    final info = await current.get();
+    if (info.isEmpty) {
       throw Exception('歌单不存在');
     }
 
-    // 替换 list 指定位置的值
-    list[index] = MusicOrderItem(
-      id: current.id,
-      name: data.name,
-      cover: data.cover,
-      desc: data.desc,
-      author: data.author,
-      musicList: current.musicList,
-    );
-
-    return _update(list);
+    await current.update((o) {
+      return o(
+        name: Value(data.name),
+        desc: Value(data.desc),
+        cover: Value(data.cover),
+        author: Value(data.author),
+        updatedAt: Value(DateTime.now()),
+      );
+    });
   }
 
   @override
   Future<void> delete(data) async {
-    final list = await _loadData();
-    final index = list.indexWhere((e) => e.id == data.id);
-    // 判断歌单是否已存在
-    if (index < 0) {
-      throw Exception('歌单不存在');
-    }
-    list.removeAt(index);
-    return _update(list);
+    await db.managers.localMusicOrderEntity
+        .filter((f) => f.id.equals(data.id))
+        .delete();
+    await db.managers.localMusicListEntity
+        .filter((f) => f.orderId.equals(data.id))
+        .delete();
   }
 
   @override
   getDetail(id) async {
-    final list = await getList();
-    final index = list.indexWhere((r) => r.id == id);
-    if (index < 0) {
-      throw Exception("歌单不存在");
-    }
-    return list[index];
-  }
-
-  @override
-  appendMusic(id, musics) async {
-    final list = await _loadData();
-    final index = list.indexWhere((e) => e.id == id);
-    // 判断歌单是否已存在
-    if (index < 0) {
+    final order = await db.managers.localMusicOrderEntity
+        .filter((f) => f.id.equals(id))
+        .getSingleOrNull();
+    if (order == null) {
       throw Exception('歌单不存在');
     }
-    final current = list[index];
-    List<String> mids = musics.map((e) => e.id).toList();
-    current.musicList.removeWhere((m) => mids.contains(m.id));
-    current.musicList.addAll(musics);
-
-    // 替换 list 指定位置的值
-    list[index] = MusicOrderItem(
-      id: current.id,
-      name: current.name,
-      cover: current.cover,
-      desc: current.desc,
-      author: current.author,
-      musicList: current.musicList,
+    final list = await db.managers.localMusicListEntity
+        .filter((f) => f.orderId.equals(id))
+        .get();
+    return MusicOrderItem(
+      id: order.id,
+      name: order.name,
+      desc: order.desc ?? '',
+      author: order.author ?? '',
+      musicList: list
+          .map((l) => MusicItem(
+                id: l.musicId,
+                name: l.name,
+                cover: l.cover ?? '',
+                author: l.author ?? '',
+                duration: l.duration,
+                origin: OriginType.getByValue(l.origin),
+              ))
+          .toList(),
     );
-
-    return _update(list);
   }
 
   @override
-  updateMusic(id, musics) async {
-    final list = await _loadData();
-    final index = list.indexWhere((e) => e.id == id);
-    // 判断歌单是否已存在
-    if (index < 0) {
+  appendMusic(orderID, musics) async {
+    final current = await db.managers.localMusicOrderEntity
+        .filter((f) => f.id.equals(orderID))
+        .getSingleOrNull();
+    if (current == null) {
       throw Exception('歌单不存在');
     }
-    final current = list[index];
-    List<String> mids = musics.map((e) => e.id).toList();
-
-    final newList = current.musicList.map((m) {
-      if (mids.contains(m.id)) {
-        final c = musics.firstWhere((e) => e.id == m.id);
-        return MusicItem(
-          name: c.name,
-          cover: m.cover,
-          id: m.id,
+    for (var m in musics) {
+      await db.managers.localMusicListEntity.create((o) {
+        return o(
+          id: generateUUID(),
+          orderId: orderID,
+          musicId: m.id,
+          name: m.name,
+          cover: Value(m.cover),
+          author: Value(m.author),
           duration: m.duration,
-          author: m.author,
-          origin: m.origin,
+          origin: m.origin.toString(),
         );
-      }
-      return m;
-    }).toList();
+      });
+    }
+  }
 
-    // 替换 list 指定位置的值
-    list[index] = MusicOrderItem(
-      id: current.id,
-      name: current.name,
-      cover: current.cover,
-      desc: current.desc,
-      author: current.author,
-      musicList: newList,
-    );
-
-    return _update(list);
+  @override
+  updateMusic(orderID, musics) async {
+    for (var m in musics) {
+      await db.managers.localMusicListEntity
+          .filter((f) => f.orderId.equals(orderID) & f.musicId.equals(m.id))
+          .update((o) {
+        return o(
+          name: Value(m.name),
+          cover: Value(m.cover),
+          duration: Value(m.duration),
+          author: Value(m.author),
+          origin: Value(m.origin.toString()),
+        );
+      });
+    }
   }
 
   @override
   deleteMusic(id, musics) async {
-    final list = await _loadData();
-    final index = list.indexWhere((e) => e.id == id);
-    // 判断歌单是否已存在
-    if (index < 0) {
-      throw Exception('歌单不存在');
-    }
-    final current = list[index];
-    List<String> mids = musics.map((e) => e.id).toList();
-    current.musicList.removeWhere((m) => mids.contains(m.id));
-
-    // 替换 list 指定位置的值
-    list[index] = MusicOrderItem(
-      id: current.id,
-      name: current.name,
-      cover: current.cover,
-      desc: current.desc,
-      author: current.author,
-      musicList: current.musicList,
-    );
-
-    return _update(list);
+    await db.managers.localMusicListEntity
+        .filter((f) =>
+            f.orderId.equals(id) &
+            f.musicId.isIn(musics.map((e) => e.id).toList()))
+        .delete();
   }
-}
-
-Future<void> updateLocalMusicOrderData(List<MusicOrderItem> list) async {
-  final localStorage = await SharedPreferences.getInstance();
-  final jsonStr = json.encode(list);
-  await localStorage.setString(LocalOriginConst.cacheKey, jsonStr);
 }
