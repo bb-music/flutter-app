@@ -14,6 +14,7 @@ import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/player/service.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:provider/provider.dart';
+import 'package:bbmusic/modules/data_sync/data_sync.dart';
 
 // toast 初始化
 final botToastBuilder = BotToastInit();
@@ -37,6 +38,8 @@ void main() async {
     await initWindowManage();
   }
   WidgetsFlutterBinding.ensureInitialized();
+  await syncLocalDataToDatabase();
+
   JustAudioMediaKit.ensureInitialized(
     iOS: false,
     android: false,
