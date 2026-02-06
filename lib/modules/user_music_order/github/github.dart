@@ -4,6 +4,7 @@ import 'package:bbmusic/icons/icon.dart';
 import 'package:bbmusic/modules/user_music_order/github/config_view.dart';
 import 'package:bbmusic/modules/user_music_order/github/constants.dart';
 import 'package:bbmusic/modules/user_music_order/github/types.dart';
+import 'package:bbmusic/utils/logs.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -58,12 +59,14 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
           try {
             await _update([], '创建歌单文件', '');
           } catch (e) {
+            logs.e("创建文件失败", error: e);
             BotToast.showText(text: "创建文件失败");
             return Future.error(e);
           }
         }
       }
-
+      BotToast.showText(text: "初始化歌单文件失败");
+      logs.e("初始化歌单文件失败", error: e);
       return Future.error(e);
     }
   }
@@ -77,6 +80,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       return res;
     } catch (e) {
       final msg = '$cname歌单获取失败';
+      logs.e(msg, error: e);
       BotToast.showText(text: msg);
       return Future.error(msg);
     }
@@ -117,7 +121,7 @@ class UserMusicOrderForGithub implements UserMusicOrderOrigin {
       final res = await _loadData();
       return res.content;
     } catch (e) {
-      BotToast.showText(text: "获取歌单列表失败");
+      // BotToast.showText(text: "获取歌单列表失败");
       return [];
     }
   }

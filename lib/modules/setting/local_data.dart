@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalDataManage {
   final db = AppDatabase();
@@ -46,6 +47,48 @@ class LocalDataManage {
     } else {
       data[CacheKey.localMusicOrderList] = [];
     }
+    return data;
+  }
+
+  Future<Map<String, dynamic>> getDataForDB() async {
+    var data = <String, List<dynamic>>{};
+    // 播放列表
+    final playerList = await db.managers.playerListEntity.get();
+    data[CacheKey.playerList] = playerList;
+    // 搜索历史
+    final searchHistory = await db.managers.searchHistoryEntity.get();
+    data[CacheKey.searchHistory] = searchHistory.map((m) => m.name).toList();
+    // 广场源
+    final openMusicOrderUrls = await db.managers.openMusicOrderUrlEntity.get();
+    data[CacheKey.openMusicOrderUrls] =
+        openMusicOrderUrls.map((m) => m.url).toList();
+    // 云端歌单
+    final cloudMusicOrderList = await db.managers.cloudMusicOrderEntity.get();
+    data[CacheKey.cloudMusicOrderSetting] = cloudMusicOrderList.map((o) {
+      return {
+        'id': o.id,
+        'name': o.origin,
+        'sub_name': o.subName,
+        'config': jsonDecode(o.config ?? '{}'),
+      };
+    }).toList();
+
+    // 本地歌单
+    final localMusicOrderList = await db.managers.localMusicOrderEntity.get();
+    final localMusicList = await db.managers.localMusicListEntity.get();
+    data[CacheKey.localMusicOrderList] = localMusicOrderList.map((o) {
+      return {
+        'id': o.id,
+        'name': o.name,
+        'desc': o.desc,
+        'cover': o.cover,
+        'author': o.author,
+        'createAt': o.createdAt,
+        'updateAt': o.updatedAt,
+        'musicList': localMusicList.where((m) => m.orderId == o.id),
+      };
+    }).toList();
+
     return data;
   }
 
@@ -92,11 +135,9 @@ class LocalDataManage {
     }
   }
 
-  // 导入
+  // 导入 local
   import(BuildContext context) async {
-    final player = Provider.of<PlayerModel>(context, listen: false);
-    final orderOrigin =
-        Provider.of<MusicOrderOriginSettingModel>(context, listen: false);
+    final localStorage = await SharedPreferences.getInstance();
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -115,64 +156,72 @@ class LocalDataManage {
       final playerList = data[CacheKey.playerList];
       // 播放列表
       if (playerList is List && playerList.isNotEmpty) {
-        player.clearPlayerList();
-        final List<MusicItem> list = playerList
-            .map(
-              (item) => MusicItem.fromJson(item),
-            )
-            .toList();
-        player.addPlayerList(list);
+        await localStorage.setStringList(
+          CacheKey.playerList,
+          playerList.map((p) => jsonEncode(p)).toList(),
+        );
       }
       // 搜索历史
       final searchHistory = data[CacheKey.searchHistory];
       if (searchHistory is List && searchHistory.isNotEmpty) {
-        await updateSearchHistoryData(
+        localStorage.setStringList(
+          CacheKey.searchHistory,
           searchHistory.map((e) => e.toString()).toList(),
         );
       }
       // 广场源
       final openMusicOrderUrls = data[CacheKey.openMusicOrderUrls];
       if (openMusicOrderUrls is List && openMusicOrderUrls.isNotEmpty) {
-        for (var url in openMusicOrderUrls) {
-          await db.managers.openMusicOrderUrlEntity.create(
-            (o) => o(
-              id: generateUUID(),
-              url: url.toString(),
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
+        localStorage.setStringList(
+          CacheKey.openMusicOrderUrls,
+          openMusicOrderUrls.map((e) => e.toString()).toList(),
+        );
       }
       // 云端歌单源
       final cloudList = data[CacheKey.cloudMusicOrderSetting];
       if (cloudList is List && cloudList.isNotEmpty) {
-        for (var item in cloudList) {
-          orderOrigin.add(
-            item['name'],
-            item['sub_name'],
-            item['config'],
-          );
-        }
+        localStorage.setString(
+          CacheKey.cloudMusicOrderSetting,
+          jsonEncode(cloudList),
+        );
       }
       // 本地歌单
       final localList = data[CacheKey.localMusicOrderList];
       if (localList is List && localList.isNotEmpty) {
-        for (var item in orderOrigin.userMusicOrderList) {
-          if (item.service.name == LocalOriginConst.name) {
-            await db.managers.localMusicOrderEntity.create(
-              (o) => o(
-                id: generateUUID(),
-                name: item.service.cname,
-              ),
-              mode: InsertMode.insertOrReplace,
-            );
-            // await updateLocalMusicOrderData(
-            //   localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
-            // );
-            orderOrigin.loadSignal(LocalOriginConst.name);
-          }
-        }
+        localStorage.setString('umo_local', jsonEncode(localList));
       }
+
+      BotToast.showText(text: "导入成功");
+    }
+  }
+
+  // 导入
+  importDB(BuildContext context) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ["json"],
+    );
+
+    if (result != null) {
+      // 获取文件内容
+      File file = File(result.files.single.path!);
+      String content = await file.readAsString();
+      if (content.isEmpty) {
+        return;
+      }
+      // json 转 map
+      Map<String, dynamic> data = jsonDecode(content);
+      // 播放列表
+      final playerList = data[CacheKey.playerList];
+      // 搜索历史
+      final searchHistory = data[CacheKey.searchHistory];
+      // 歌单广场地址
+      final openMusicOrderUrls = data[CacheKey.openMusicOrderUrls];
+      // 云端歌单列表
+      final cloudMusicOrderList = data[CacheKey.cloudMusicOrderSetting];
+      // 本地歌单列表
+      final localMusicOrderList = data[CacheKey.localMusicOrderList];
+
       BotToast.showText(text: "导入成功");
     }
   }

@@ -38,7 +38,7 @@ void main() async {
     await initWindowManage();
   }
   WidgetsFlutterBinding.ensureInitialized();
-  await syncLocalDataToDatabase();
+  await autoSyncLocalDataToDatabase();
 
   JustAudioMediaKit.ensureInitialized(
     iOS: false,

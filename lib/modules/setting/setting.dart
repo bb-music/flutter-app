@@ -1,6 +1,8 @@
+import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/modules/setting/local_data.dart';
 import 'package:bbmusic/modules/setting/music_order_origin/list_view.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final LocalDataManage localDataManage = LocalDataManage();
@@ -79,6 +81,14 @@ class SettingView extends StatelessWidget {
               launchUrl(
                 Uri.parse("https://juejin.cn/post/7414129923633905675"),
               );
+            },
+          ),
+          ListTile(
+            title: const Text("清理缓存"),
+            leading: const Icon(Icons.cleaning_services),
+            onTap: () async {
+              final localStorage = await SharedPreferences.getInstance();
+              localStorage.remove(CacheKey.isSyncDB);
             },
           ),
         ],

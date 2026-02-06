@@ -3,46 +3,92 @@ import 'dart:convert';
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/database/database.dart';
 import 'package:bbmusic/database/uuid.dart';
-import 'package:bbmusic/modules/user_music_order/local/constants.dart';
+import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/utils/logs.dart';
 import 'package:drift/drift.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:path_provider/path_provider.dart';
+
+const String localMusicOrderCacheKey = 'umo_local'; // 本地歌单列表缓存键
 
 // 将之前存储在本地缓存中的数据同步到数据库中
-Future<void> syncLocalDataToDatabase() async {
-  // try {
-  final localStorage = await SharedPreferences.getInstance();
-  // 数据库地址
-  // final dbPath = await getApplicationSupportDirectory();
-  // 是否已经同步过
-  final isSync = localStorage.getBool("isSyncDataBase") ?? false;
-  if (isSync) {
-    return;
+Future<void> autoSyncLocalDataToDatabase() async {
+  try {
+    final localStorage = await SharedPreferences.getInstance();
+    // 数据库地址
+    // final dbPath = await getApplicationSupportDirectory();
+    // 是否已经同步过
+    final isSync = localStorage.getBool(CacheKey.isSyncDB) ?? false;
+    if (isSync) {
+      return;
+    }
+    // 播放列表
+    final playerList = localStorage.getStringList(CacheKey.playerList) ?? [];
+    // 搜索历史
+    final searchHistory =
+        localStorage.getStringList(CacheKey.searchHistory) ?? [];
+    // 歌单广场地址
+    final openMusicOrderUrls =
+        localStorage.getStringList(CacheKey.openMusicOrderUrls) ?? [];
+    // 云端歌单列表
+    final cloudMusicOrderStr =
+        localStorage.getString(CacheKey.cloudMusicOrderSetting) ?? "[]";
+    final cloudMusicOrder = jsonDecode(cloudMusicOrderStr) as List<dynamic>;
+    // 本地歌单列表
+    final localMusicOrderStr =
+        localStorage.getString(localMusicOrderCacheKey) ?? "[]";
+    final localMusicOrder = jsonDecode(localMusicOrderStr) as List<dynamic>;
+
+    await dataSyncDB(
+      playerList:
+          playerList.map((p) => jsonDecode(p) as Map<String, dynamic>).toList(),
+      searchHistory: searchHistory,
+      openMusicOrderUrls: openMusicOrderUrls,
+      cloudMusicOrder:
+          cloudMusicOrder.map((p) => p as Map<String, dynamic>).toList(),
+      localMusicOrder:
+          localMusicOrder.map((p) => p as Map<String, dynamic>).toList(),
+      isReplace: true,
+    );
+
+    // 将本地缓存中的数据删除
+    for (var key in [
+      CacheKey.playerList,
+      CacheKey.searchHistory,
+      CacheKey.openMusicOrderUrls,
+      CacheKey.cloudMusicOrderSetting,
+      localMusicOrderCacheKey
+    ]) {
+      localStorage.remove(key);
+    }
+    localStorage.setBool(CacheKey.isSyncDB, true);
+    logs.i('同步数据成功');
+  } catch (e) {
+    logs.e("同步数据失败", error: e);
   }
-  final db = AppDatabase();
+}
+
+Future<void> dataSyncDB({
   // 播放列表
-  final playerList = localStorage.getStringList(CacheKey.playerList) ?? [];
+  required List<Map<String, dynamic>> playerList,
   // 搜索历史
-  final searchHistory =
-      localStorage.getStringList(CacheKey.searchHistory) ?? [];
+  required List<String> searchHistory,
   // 歌单广场地址
-  final openMusicOrderUrls =
-      localStorage.getStringList(CacheKey.openMusicOrderUrls) ?? [];
+  required List<String> openMusicOrderUrls,
   // 云端歌单列表
-  final cloudMusicOrderStr =
-      localStorage.getString(CacheKey.cloudMusicOrderSetting) ?? "[]";
-  final cloudMusicOrder = jsonDecode(cloudMusicOrderStr) as List<dynamic>;
+  required List<Map<String, dynamic>> cloudMusicOrder,
   // 本地歌单列表
-  final localMusicOrderStr =
-      localStorage.getString(LocalOriginConst.cacheKey) ?? "[]";
-  final localMusicOrder = jsonDecode(localMusicOrderStr) as List<dynamic>;
+  required List<Map<String, dynamic>> localMusicOrder,
+  // 是否覆盖
+  bool? isReplace = false,
+}) async {
+  final db = AppDatabase();
 
   // 同步播放列表到数据库
   if (playerList.isNotEmpty) {
-    db.managers.playerListEntity.delete();
-    for (var p in playerList) {
-      final data = jsonDecode(p);
+    if (isReplace == true) {
+      db.managers.playerListEntity.delete();
+    }
+    for (var data in playerList) {
       await db.managers.playerListEntity.create(
         (o) {
           return o(
@@ -51,7 +97,7 @@ Future<void> syncLocalDataToDatabase() async {
             name: data['name'],
             duration: data['duration'],
             author: Value(data['author'] ?? ''),
-            origin: data['origin'],
+            origin: OriginType.getByValue(data['origin']).value,
           );
         },
         mode: InsertMode.replace,
@@ -61,7 +107,9 @@ Future<void> syncLocalDataToDatabase() async {
 
   // 同步搜索历史到数据库
   if (searchHistory.isNotEmpty) {
-    db.managers.searchHistoryEntity.delete();
+    if (isReplace == true) {
+      db.managers.searchHistoryEntity.delete();
+    }
     for (var p in searchHistory) {
       db.managers.searchHistoryEntity.create(
         (o) {
@@ -76,7 +124,9 @@ Future<void> syncLocalDataToDatabase() async {
 
   // 同步歌单广场地址到数据库
   if (openMusicOrderUrls.isNotEmpty) {
-    db.managers.openMusicOrderUrlEntity.delete();
+    if (isReplace == true) {
+      db.managers.openMusicOrderUrlEntity.delete();
+    }
     for (var p in openMusicOrderUrls) {
       db.managers.openMusicOrderUrlEntity.create(
         (o) {
@@ -92,7 +142,9 @@ Future<void> syncLocalDataToDatabase() async {
 
   // 同步云端歌单列表到数据库
   if (cloudMusicOrder.isNotEmpty) {
-    db.managers.cloudMusicOrderEntity.delete();
+    if (isReplace == true) {
+      db.managers.cloudMusicOrderEntity.delete();
+    }
     for (var p in cloudMusicOrder) {
       db.managers.cloudMusicOrderEntity.create(
         (o) {
@@ -110,8 +162,10 @@ Future<void> syncLocalDataToDatabase() async {
 
   // 同步本地歌单列表到数据库
   if (localMusicOrder.isNotEmpty) {
-    db.managers.localMusicOrderEntity.delete();
-    db.managers.localMusicListEntity.delete();
+    if (isReplace == true) {
+      db.managers.localMusicOrderEntity.delete();
+      db.managers.localMusicListEntity.delete();
+    }
     for (var data in localMusicOrder) {
       final info = await db.managers.localMusicOrderEntity.createReturning((o) {
         return o(
@@ -137,7 +191,7 @@ Future<void> syncLocalDataToDatabase() async {
                 duration: m['duration'] ?? 0,
                 cover: Value(m['cover'] ?? ''),
                 author: Value(m['author'] ?? ''),
-                origin: m['origin'],
+                origin: OriginType.getByValue(m['origin']).value,
               );
             },
             mode: InsertMode.replace,
@@ -146,10 +200,4 @@ Future<void> syncLocalDataToDatabase() async {
       }
     }
   }
-
-  localStorage.setBool("isSyncDataBase", true);
-  logs.i('同步数据成功');
-  // } catch (e) {
-  //   logs.e("同步数据失败", error: e);
-  // }
 }

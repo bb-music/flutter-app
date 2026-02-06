@@ -25,4 +25,7 @@ class CacheKey {
 
   /// 播放进度
   static String playerPosition = 'player_position';
+
+  /// 是否已同步数据库
+  static String isSyncDB = 'is_sync_db';
 }
