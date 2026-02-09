@@ -123,27 +123,24 @@ class _SearchViewState extends State<SearchView> {
 
   getSearchHistory() async {
     final list = await getSearchHistoryData();
-
     setState(() {
       _searchHistory = list;
     });
   }
 
   updateSearchHistory(String keyword, {bool isDelete = false}) async {
-    await db.managers.searchHistoryEntity.create((o) {
-      return o(
-        name: keyword,
-        createdAt: Value(DateTime.now()),
-      );
-    });
-
-    final list = await db.managers.searchHistoryEntity
-        .orderBy((o) => o.createdAt.desc())
-        .get();
-
-    setState(() {
-      _searchHistory = list.map((e) => e.name).toList();
-    });
+    await db.managers.searchHistoryEntity
+        .filter((f) => f.name.equals(keyword))
+        .delete();
+    if (!isDelete) {
+      await db.managers.searchHistoryEntity.create((o) {
+        return o(
+          name: keyword,
+          createdAt: Value(DateTime.now()),
+        );
+      });
+    }
+    await getSearchHistory();
   }
 
   @override
@@ -383,21 +380,8 @@ class _SearchFormState extends State<_SearchForm> {
 
 Future<List<String>> getSearchHistoryData() async {
   final db = AppDatabase();
-  final list = await db.managers.searchHistoryEntity.get();
+  final list = await db.managers.searchHistoryEntity
+      .orderBy((o) => o.createdAt.desc())
+      .get();
   return list.map((e) => e.name).toList();
-}
-
-Future updateSearchHistoryData(List<String> list) async {
-  final db = AppDatabase();
-  await db.managers.searchHistoryEntity.delete();
-  for (var p in list) {
-    await db.managers.searchHistoryEntity.create(
-      (o) {
-        return o(
-          name: p,
-        );
-      },
-      mode: InsertMode.replace,
-    );
-  }
 }

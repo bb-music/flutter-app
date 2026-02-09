@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/database/database.dart';
 import 'package:bbmusic/database/uuid.dart';
+import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
 import 'package:bbmusic/utils/logs.dart';
 import 'package:drift/drift.dart';
@@ -39,14 +40,22 @@ Future<void> autoSyncLocalDataToDatabase() async {
     final localMusicOrder = jsonDecode(localMusicOrderStr) as List<dynamic>;
 
     await dataSyncDB(
-      playerList:
-          playerList.map((p) => jsonDecode(p) as Map<String, dynamic>).toList(),
+      playerList: playerList.map(
+        (p) {
+          final d = jsonDecode(p) as Map<String, dynamic>;
+          return MusicItem.fromJson(d);
+        },
+      ).toList(),
       searchHistory: searchHistory,
       openMusicOrderUrls: openMusicOrderUrls,
-      cloudMusicOrder:
-          cloudMusicOrder.map((p) => p as Map<String, dynamic>).toList(),
-      localMusicOrder:
-          localMusicOrder.map((p) => p as Map<String, dynamic>).toList(),
+      cloudMusicOrder: cloudMusicOrder.map((p) {
+        final d = p as Map<String, dynamic>;
+        return OriginSettingItem.fromJson(d);
+      }).toList(),
+      localMusicOrder: localMusicOrder.map((p) {
+        final d = p as Map<String, dynamic>;
+        return MusicOrderItem.fromJson(d);
+      }).toList(),
       isReplace: true,
     );
 
@@ -69,15 +78,15 @@ Future<void> autoSyncLocalDataToDatabase() async {
 
 Future<void> dataSyncDB({
   // 播放列表
-  required List<Map<String, dynamic>> playerList,
+  required List<MusicItem> playerList,
   // 搜索历史
   required List<String> searchHistory,
   // 歌单广场地址
   required List<String> openMusicOrderUrls,
   // 云端歌单列表
-  required List<Map<String, dynamic>> cloudMusicOrder,
+  required List<OriginSettingItem> cloudMusicOrder,
   // 本地歌单列表
-  required List<Map<String, dynamic>> localMusicOrder,
+  required List<MusicOrderItem> localMusicOrder,
   // 是否覆盖
   bool? isReplace = false,
 }) async {
@@ -86,18 +95,18 @@ Future<void> dataSyncDB({
   // 同步播放列表到数据库
   if (playerList.isNotEmpty) {
     if (isReplace == true) {
-      db.managers.playerListEntity.delete();
+      await db.managers.playerListEntity.delete();
     }
     for (var data in playerList) {
       await db.managers.playerListEntity.create(
         (o) {
           return o(
-            id: data['id'],
-            cover: Value(data['cover'] ?? ''),
-            name: data['name'],
-            duration: data['duration'],
-            author: Value(data['author'] ?? ''),
-            origin: OriginType.getByValue(data['origin']).value,
+            id: data.id,
+            cover: Value(data.cover ?? ''),
+            name: data.name,
+            duration: data.duration,
+            author: Value(data.author ?? ''),
+            origin: data.origin.value,
           );
         },
         mode: InsertMode.replace,
@@ -108,10 +117,10 @@ Future<void> dataSyncDB({
   // 同步搜索历史到数据库
   if (searchHistory.isNotEmpty) {
     if (isReplace == true) {
-      db.managers.searchHistoryEntity.delete();
+      await db.managers.searchHistoryEntity.delete();
     }
     for (var p in searchHistory) {
-      db.managers.searchHistoryEntity.create(
+      await db.managers.searchHistoryEntity.create(
         (o) {
           return o(
             name: p,
@@ -125,10 +134,10 @@ Future<void> dataSyncDB({
   // 同步歌单广场地址到数据库
   if (openMusicOrderUrls.isNotEmpty) {
     if (isReplace == true) {
-      db.managers.openMusicOrderUrlEntity.delete();
+      await db.managers.openMusicOrderUrlEntity.delete();
     }
     for (var p in openMusicOrderUrls) {
-      db.managers.openMusicOrderUrlEntity.create(
+      await db.managers.openMusicOrderUrlEntity.create(
         (o) {
           return o(
             id: generateUUID(),
@@ -143,16 +152,16 @@ Future<void> dataSyncDB({
   // 同步云端歌单列表到数据库
   if (cloudMusicOrder.isNotEmpty) {
     if (isReplace == true) {
-      db.managers.cloudMusicOrderEntity.delete();
+      await db.managers.cloudMusicOrderEntity.delete();
     }
     for (var p in cloudMusicOrder) {
-      db.managers.cloudMusicOrderEntity.create(
+      await db.managers.cloudMusicOrderEntity.create(
         (o) {
           return o(
             id: generateUUID(),
-            origin: p['name'],
-            subName: p['sub_name'] ?? '',
-            config: jsonEncode(p['config']),
+            origin: p.name,
+            subName: p.subName ?? '',
+            config: jsonEncode(p.config),
           );
         },
         mode: InsertMode.replace,
@@ -163,35 +172,35 @@ Future<void> dataSyncDB({
   // 同步本地歌单列表到数据库
   if (localMusicOrder.isNotEmpty) {
     if (isReplace == true) {
-      db.managers.localMusicOrderEntity.delete();
-      db.managers.localMusicListEntity.delete();
+      await db.managers.localMusicOrderEntity.delete();
+      await db.managers.localMusicListEntity.delete();
     }
     for (var data in localMusicOrder) {
       final info = await db.managers.localMusicOrderEntity.createReturning((o) {
         return o(
           id: generateUUID(),
-          name: data['name'],
-          desc: Value(data['desc'] ?? ''),
-          cover: Value(data['cover'] ?? ''),
-          author: Value(data['author'] ?? ''),
+          name: data.name,
+          desc: Value(data.desc),
+          cover: Value(data.cover),
+          author: Value(data.author),
         );
       });
-      final musicList = data['musicList'];
+      final musicList = data.musicList;
 
       // 关联歌曲与歌单
-      if (musicList is List<dynamic>) {
+      if (musicList.isNotEmpty) {
         for (var m in musicList) {
-          db.managers.localMusicListEntity.create(
+          await db.managers.localMusicListEntity.create(
             (o) {
               return o(
                 id: generateUUID(),
                 orderId: info.id,
-                musicId: m['id'],
-                name: m['name'],
-                duration: m['duration'] ?? 0,
-                cover: Value(m['cover'] ?? ''),
-                author: Value(m['author'] ?? ''),
-                origin: OriginType.getByValue(m['origin']).value,
+                musicId: m.id,
+                name: m.name,
+                duration: m.duration,
+                cover: Value(m.cover),
+                author: Value(m.author),
+                origin: m.origin.value,
               );
             },
             mode: InsertMode.replace,

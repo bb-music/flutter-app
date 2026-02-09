@@ -3,17 +3,16 @@ import 'dart:io';
 
 import 'package:bbmusic/constants/cache_key.dart';
 import 'package:bbmusic/database/database.dart';
-import 'package:bbmusic/database/uuid.dart';
+import 'package:bbmusic/modules/data_sync/data_sync.dart';
 import 'package:bbmusic/modules/download/model.dart';
 import 'package:bbmusic/modules/open_music_order/utils.dart';
 import 'package:bbmusic/modules/player/model.dart';
 import 'package:bbmusic/modules/search/search.dart';
 import 'package:bbmusic/modules/setting/music_order_origin/mode.dart';
 import 'package:bbmusic/modules/user_music_order/local/constants.dart';
-import 'package:bbmusic/modules/user_music_order/local/local.dart';
 import 'package:bbmusic/origin_sdk/origin_types.dart';
+import 'package:bbmusic/utils/logs.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -83,9 +82,20 @@ class LocalDataManage {
         'desc': o.desc,
         'cover': o.cover,
         'author': o.author,
-        'createAt': o.createdAt,
-        'updateAt': o.updatedAt,
-        'musicList': localMusicList.where((m) => m.orderId == o.id),
+        'musicList': localMusicList.where((m) => m.orderId == o.id).map(
+          (m) {
+            return {
+              'id': m.musicId,
+              "orderId": m.orderId,
+              "dbId": m.id,
+              'name': m.name,
+              'cover': m.cover,
+              'author': m.author,
+              'duration': m.duration,
+              'origin': m.origin,
+            };
+          },
+        ).toList(),
       };
     }).toList();
 
@@ -94,7 +104,7 @@ class LocalDataManage {
 
   export(BuildContext context) async {
     // map 转 json
-    final data = await getData(context);
+    final data = await getDataForDB();
     String jsonStr = jsonEncode(data);
 
     // 权限判断
@@ -136,7 +146,7 @@ class LocalDataManage {
   }
 
   // 导入 local
-  import(BuildContext context) async {
+  importLocal(BuildContext context) async {
     final localStorage = await SharedPreferences.getInstance();
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -196,7 +206,7 @@ class LocalDataManage {
   }
 
   // 导入
-  importDB(BuildContext context) async {
+  import(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ["json"],
@@ -212,17 +222,42 @@ class LocalDataManage {
       // json 转 map
       Map<String, dynamic> data = jsonDecode(content);
       // 播放列表
-      final playerList = data[CacheKey.playerList];
+      final playerList = data[CacheKey.playerList] as List<dynamic>;
       // 搜索历史
-      final searchHistory = data[CacheKey.searchHistory];
+      final searchHistory = data[CacheKey.searchHistory] as List<dynamic>;
       // 歌单广场地址
-      final openMusicOrderUrls = data[CacheKey.openMusicOrderUrls];
+      final openMusicOrderUrls =
+          data[CacheKey.openMusicOrderUrls] as List<dynamic>;
       // 云端歌单列表
-      final cloudMusicOrderList = data[CacheKey.cloudMusicOrderSetting];
+      final cloudMusicOrderList =
+          data[CacheKey.cloudMusicOrderSetting] as List<dynamic>;
       // 本地歌单列表
-      final localMusicOrderList = data[CacheKey.localMusicOrderList];
+      final localMusicOrderList =
+          data[CacheKey.localMusicOrderList] as List<dynamic>;
 
-      BotToast.showText(text: "导入成功");
+      try {
+        await dataSyncDB(
+          playerList: playerList.map((p) => MusicItem.fromJson(p)).toList(),
+          searchHistory: searchHistory.map((e) => e.toString()).toList(),
+          openMusicOrderUrls:
+              openMusicOrderUrls.map((e) => e.toString()).toList(),
+          cloudMusicOrder: cloudMusicOrderList
+              .map((p) => OriginSettingItem.fromJson(p))
+              .toList(),
+          localMusicOrder: localMusicOrderList
+              .map((p) => MusicOrderItem.fromJson(p))
+              .toList(),
+        );
+        if (context.mounted) {
+          final player = Provider.of<PlayerModel>(context, listen: false);
+          await player.reloadPlayerList();
+        }
+
+        BotToast.showText(text: "导入成功");
+      } catch (e) {
+        BotToast.showText(text: "导入失败");
+        logs.e('导入失败', error: e);
+      }
     }
   }
 }

@@ -19,7 +19,6 @@ class UserMusicOrderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<MusicOrderOriginSettingModel>(context, listen: false).init();
     return Scaffold(
       appBar: AppBar(
         title: const Text("我的歌单"),

@@ -116,7 +116,7 @@ class BiliClient implements OriginService {
             );
           }
           if (resData['v_voucher'] != null) {
-            BotToast.showText(text: '请求失败, 触发风控');
+            BotToast.showText(text: '请求失败，触发风控，请稍后重试');
             logs.e(
               'bili: 请求失败, 触发风控',
               error: logData,

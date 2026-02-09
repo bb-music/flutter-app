@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 final dio = Dio();
 
@@ -56,8 +57,17 @@ Future<String> _downloadForDesktop(
   MusicItem music,
   String name,
 ) async {
-  final dir = await getDownloadDir();
-  final addr = path.join('${dir!.path}/$name');
+  String? outputFile = await FilePicker.platform.saveFile(
+    dialogTitle: '保存音乐',
+    fileName: name,
+    allowedExtensions: ['mp3'],
+    type: FileType.custom,
+  );
+
+  if (outputFile == null) {
+    throw '取消下载';
+  }
+  final addr = outputFile;
 
   // 查询缓存文件
   final key = music2cacheKey(music);
@@ -69,6 +79,7 @@ Future<String> _downloadForDesktop(
   }
   // 从网络下载
   final m = await service.getMusicUrl(music.id);
+
   await dio.download(
     m.url,
     addr,

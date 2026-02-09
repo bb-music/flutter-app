@@ -331,7 +331,7 @@ class BBPlayer {
           name: m.name,
           duration: m.duration,
           author: Value(m.author),
-          origin: m.origin.toString(),
+          origin: m.origin.value,
         );
       });
     });
@@ -436,22 +436,25 @@ class BBPlayer {
       _playerHistory.addAll(h);
     }
 
-    // 播放列表
+    // 重载播放列表
+    reloadPlayerList();
+  }
+
+  // 重载播放列表
+  Future<void> reloadPlayerList() async {
     List<PlayerListEntityData> pl = await db.managers.playerListEntity.get();
-    if (pl.isNotEmpty) {
-      playerList.clear();
-      final ms = pl.map((p) {
-        return MusicItem(
-          id: p.id,
-          name: p.name,
-          cover: p.cover ?? '',
-          author: p.author ?? '',
-          duration: p.duration,
-          origin: OriginType.getByValue(p.origin),
-        );
-      }).toList();
-      playerList.addAll(ms);
-    }
+    playerList.clear();
+    final ms = pl.map((p) {
+      return MusicItem(
+        id: p.id,
+        name: p.name,
+        cover: p.cover ?? '',
+        author: p.author ?? '',
+        duration: p.duration,
+        origin: OriginType.getByValue(p.origin),
+      );
+    }).toList();
+    playerList.addAll(ms);
   }
 }
 

@@ -101,7 +101,7 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
             cover: Value(m.cover),
             author: Value(m.author),
             duration: m.duration,
-            origin: m.origin.toString(),
+            origin: m.origin.value,
           );
         });
       }
@@ -203,7 +203,7 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
           cover: Value(m.cover),
           author: Value(m.author),
           duration: m.duration,
-          origin: m.origin.toString(),
+          origin: m.origin.value,
         );
       });
     }
@@ -220,7 +220,7 @@ class UserMusicOrderForLocal implements UserMusicOrderOrigin {
           cover: Value(m.cover),
           duration: Value(m.duration),
           author: Value(m.author),
-          origin: Value(m.origin.toString()),
+          origin: Value(m.origin.value),
         );
       });
     }

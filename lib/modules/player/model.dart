@@ -70,6 +70,7 @@ class PlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 跳转播放进度
   Future<void>? seek(Duration position) => _playerHandler?.seek(position);
 
   // 切换播放模式
@@ -93,6 +94,12 @@ class PlayerModel extends ChangeNotifier {
   // 清空播放列表
   void clearPlayerList() {
     _playerHandler?.player.clearPlayerList();
+    notifyListeners();
+  }
+
+  // 重载播放列表
+  Future<void> reloadPlayerList() async {
+    await _playerHandler?.player.reloadPlayerList();
     notifyListeners();
   }
 

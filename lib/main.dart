@@ -85,6 +85,8 @@ void main() async {
           Timer(const Duration(seconds: 1), () {
             updateAppVersion();
           });
+          Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
+              .init();
           return child;
         },
       ),
