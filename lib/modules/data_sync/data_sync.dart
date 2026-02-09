@@ -67,7 +67,7 @@ Future<void> autoSyncLocalDataToDatabase() async {
       CacheKey.cloudMusicOrderSetting,
       localMusicOrderCacheKey
     ]) {
-      localStorage.remove(key);
+      // localStorage.remove(key);
     }
     localStorage.setBool(CacheKey.isSyncDB, true);
     logs.i('同步数据成功');
