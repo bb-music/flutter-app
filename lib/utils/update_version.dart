@@ -1,3 +1,4 @@
+import 'package:bbmusic/utils/logs.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,8 @@ updateAppVersion() async {
       BotToast.showCustomLoading(
         toastBuilder: (cancelFunc) {
           return AlertDialog(
-            title: const Text('发现新版本，是否更新？'),
+            title: Text('发现新版本 $latestVersion，是否更新？'),
+            content: Text(resp.data['body'] ?? ''),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             actions: [
@@ -34,7 +36,7 @@ updateAppVersion() async {
                 },
                 child: const Text("取消"),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () {
                   cancelFunc();
                   // 打开网址
@@ -52,9 +54,7 @@ updateAppVersion() async {
       );
     }
   } catch (e) {
-    if (e is DioException) {
-      print(e.message);
-    }
+    logs.e("检查更新版本失败", error: e);
   }
 }
 

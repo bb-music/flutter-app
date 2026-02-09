@@ -35,10 +35,11 @@ class LocalDataManage {
         .map((l) => l.toJson())
         .toList();
     // 本地歌单
-    if (orderOrigin.userMusicOrderList.length > 0) {
-      data[CacheKey.localMusicOrderList] = orderOrigin.userMusicOrderList
+    if (orderOrigin.userMusicOrderList.isNotEmpty) {
+      data[CacheKey.localMusicOrderList] = await orderOrigin.userMusicOrderList
           .firstWhere((t) => t.id == LocalOriginConst.name)
-          .list;
+          .service
+          .getList();
     } else {
       data[CacheKey.localMusicOrderList] = [];
     }
@@ -146,14 +147,9 @@ class LocalDataManage {
       // 本地歌单
       final localList = data[CacheKey.localMusicOrderList];
       if (localList is List && localList.isNotEmpty) {
-        for (var item in orderOrigin.userMusicOrderList) {
-          if (item.service.name == LocalOriginConst.name) {
-            await updateLocalMusicOrderData(
-              localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
-            );
-            orderOrigin.loadSignal(LocalOriginConst.name);
-          }
-        }
+        await updateLocalMusicOrderData(
+          localList.map((item) => MusicOrderItem.fromJson(item)).toList(),
+        );
       }
       BotToast.showText(text: "导入成功");
     }

@@ -82,6 +82,10 @@ void main() async {
           Timer(const Duration(seconds: 1), () {
             updateAppVersion();
           });
+          // 初始化歌单
+          Provider.of<MusicOrderOriginSettingModel>(context, listen: false)
+              .init();
+
           return child;
         },
       ),

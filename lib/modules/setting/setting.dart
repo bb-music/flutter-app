@@ -81,6 +81,15 @@ class SettingView extends StatelessWidget {
               );
             },
           ),
+          ListTile(
+            title: const Text("检查更新"),
+            leading: const Icon(Icons.update),
+            onTap: () {
+              launchUrl(
+                Uri.parse("https://github.com/bb-music/flutter-app/releases"),
+              );
+            },
+          ),
         ],
       ),
     );
